@@ -154,8 +154,8 @@ offset_point <- function(x, y, toward_x, toward_y, offset) {
 
 #' Calculate Edge Endpoint on Node Border
 #'
-#' Calculates the point where an edge should meet the node border,
-#' using the same aspect ratio correction as self-loops.
+#' Calculates the point where an edge should meet the node border.
+#' Uses plain NPC units to match circleGrob borders.
 #'
 #' @param node_x,node_y Node center in npc.
 #' @param other_x,other_y Other endpoint in npc.
@@ -165,22 +165,12 @@ offset_point <- function(x, y, toward_x, toward_y, offset) {
 #' @keywords internal
 edge_endpoint <- function(node_x, node_y, other_x, other_y, node_size,
                           shape = "circle") {
-  # Get aspect ratio correction (same as self-loops)
-  vp_width <- grid::convertWidth(grid::unit(1, "npc"), "inches", valueOnly = TRUE)
-  vp_height <- grid::convertHeight(grid::unit(1, "npc"), "inches", valueOnly = TRUE)
-  min_dim <- min(vp_width, vp_height)
-  x_scale <- min_dim / vp_width
-  y_scale <- min_dim / vp_height
-
   # Calculate angle from node center to other point
-  # Use scaled coordinates for proper aspect ratio
-  dx <- (other_x - node_x) * vp_width
-  dy <- (other_y - node_y) * vp_height
-  angle <- atan2(dy, dx)
+  angle <- point_angle(node_x, node_y, other_x, other_y)
 
-  # Point on node border using same scaling as self-loops
+  # Point on node border (matches circleGrob which uses plain NPC units)
   list(
-    x = node_x + (node_size * x_scale) * cos(angle),
-    y = node_y + (node_size * y_scale) * sin(angle)
+    x = node_x + node_size * cos(angle),
+    y = node_y + node_size * sin(angle)
   )
 }
