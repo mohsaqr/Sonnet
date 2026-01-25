@@ -94,6 +94,8 @@ NULL
 #' @param node_names Alternative names for legend (separate from display labels).
 #' @param legend Logical. Show legend?
 #' @param legend_position Legend position: "topright", "topleft", "bottomright", "bottomleft".
+#' @param scaling Scaling mode: "default" for qgraph-matched scaling where node_size=6
+#'   looks similar to qgraph vsize=6, or "legacy" to preserve pre-v2.0 behavior.
 #'
 #' @return Invisible NULL. Called for side effect of drawing.
 #' @export
@@ -189,13 +191,18 @@ soplot <- function(network, title = NULL, title_size = 14,
                       # Legend options
                       node_names = NULL,
                       legend = FALSE,
-                      legend_position = "topright") {
+                      legend_position = "topright",
+                      # Scaling mode
+                      scaling = "default") {
 
 
   # Set seed for deterministic layouts
   if (!is.null(seed)) {
     set.seed(seed)
   }
+
+  # Get scale constants for current scaling mode
+  scale <- get_scale_constants(scaling)
 
   # Two-letter igraph layout codes
   igraph_codes <- c("kk", "fr", "drl", "mds", "go", "tr", "st", "gr", "rd", "ni", "ci", "lgl", "sp")
@@ -310,9 +317,19 @@ soplot <- function(network, title = NULL, title_size = 14,
     effective_donut_shapes <- recycle_to_length(donut_shape, n_nodes)
   }
 
+  # Convert node_size using scale constants (qgraph-style to NPC)
+  # If node_size is provided, convert it; otherwise let render_nodes_grid use default
+  effective_node_size <- if (!is.null(node_size)) {
+    # Convert from qgraph-style units to NPC coordinates
+    node_size * scale$soplot_node_factor
+  } else {
+    # Use default from scale constants, converted to NPC
+    scale$node_default * scale$soplot_node_factor
+  }
+
   # Apply node aesthetics if any specified
   node_aes <- list(
-    size = node_size,
+    size = effective_node_size,
     shape = node_shape,
     fill = node_fill,
     border_color = node_border_color,
@@ -352,6 +369,13 @@ soplot <- function(network, title = NULL, title_size = 14,
     network <- do.call(sn_nodes, c(list(network = network), node_aes))
   }
 
+  # Convert arrow_size using scale constants for consistency with splot
+  effective_arrow_size <- if (!is.null(arrow_size)) {
+    arrow_size * scale$arrow_factor
+  } else {
+    NULL  # Let render_edges_grid use default
+  }
+
   # Apply edge aesthetics if any specified
   edge_aes <- list(
     width = edge_width,
@@ -360,7 +384,7 @@ soplot <- function(network, title = NULL, title_size = 14,
     alpha = edge_alpha,
     style = edge_style,
     curvature = curvature,
-    arrow_size = arrow_size,
+    arrow_size = effective_arrow_size,
     show_arrows = show_arrows,
     positive_color = positive_color,
     negative_color = negative_color,
@@ -477,7 +501,7 @@ soplot <- function(network, title = NULL, title_size = 14,
   # Store all plot parameters in the network object
   plot_params <- list(
     title = title, title_size = title_size, margins = margins,
-    layout = effective_layout, theme = theme, seed = seed,
+    layout = effective_layout, theme = theme, seed = seed, scaling = scaling,
     labels = labels, threshold = threshold, maximum = maximum,
     node_size = node_size, node_shape = node_shape, node_fill = node_fill,
     node_border_color = node_border_color, node_border_width = node_border_width,

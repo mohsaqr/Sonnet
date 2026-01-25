@@ -87,11 +87,23 @@ resolve_edge_widths <- function(edges, edge.width = NULL, maximum = NULL,
 #'
 #' @param vsize User-specified node size(s).
 #' @param n Number of nodes.
-#' @param default_size Default size if NULL.
-#' @param scale_factor Scale factor to apply.
+#' @param default_size Default size if NULL (uses scale constants if NULL).
+#' @param scale_factor Scale factor to apply (uses scale constants if NULL).
+#' @param scaling Scaling mode: "default" or "legacy".
 #' @return Vector of node sizes.
 #' @keywords internal
-resolve_node_sizes <- function(vsize, n, default_size = 3, scale_factor = 0.03) {
+resolve_node_sizes <- function(vsize, n, default_size = NULL, scale_factor = NULL,
+                               scaling = "default") {
+  scale <- get_scale_constants(scaling)
+
+  # Use scale constants if not explicitly provided
+  if (is.null(default_size)) {
+    default_size <- scale$node_default
+  }
+  if (is.null(scale_factor)) {
+    scale_factor <- scale$node_factor
+  }
+
   if (is.null(vsize)) {
     vsize <- default_size
   }
@@ -100,6 +112,34 @@ resolve_node_sizes <- function(vsize, n, default_size = 3, scale_factor = 0.03) 
 
   # Convert to user coordinates (qgraph-style sizing)
   sizes * scale_factor
+}
+
+#' Resolve Label Sizes
+#'
+#' Determines label sizes, either independent (new default) or coupled to node size (legacy).
+#'
+#' @param label_size User-specified label size(s) or NULL.
+#' @param node_size_usr Node sizes in user coordinates (for legacy coupled mode).
+#' @param n Number of nodes.
+#' @param scaling Scaling mode: "default" or "legacy".
+#' @return Vector of label sizes (cex values).
+#' @keywords internal
+resolve_label_sizes <- function(label_size, node_size_usr, n, scaling = "default") {
+  scale <- get_scale_constants(scaling)
+
+  if (!is.null(label_size)) {
+    # User explicitly specified - use as-is
+    return(recycle_to_length(label_size, n))
+  }
+
+  if (scale$label_coupled) {
+    # Legacy mode: couple to node size (original behavior)
+    # vsize_usr * 8, capped at 1
+    return(pmin(1, node_size_usr * 8))
+  }
+
+ # New default: independent label size
+  rep(scale$label_default, n)
 }
 
 #' Resolve Node Colors

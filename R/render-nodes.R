@@ -20,8 +20,10 @@ render_nodes_grid <- function(network) {
   if (n == 0) return(grid::gList())
 
   # Resolve aesthetics to per-node values
+  # Default node size uses scale constants: node_default * soplot_node_factor
+  default_node_size <- SONNET_SCALE$node_default * SONNET_SCALE$soplot_node_factor
   sizes <- recycle_to_length(
-    if (!is.null(aes$size)) aes$size else theme$get("node_border_width") * 0.01 + 0.04,
+    if (!is.null(aes$size)) aes$size else default_node_size,
     n
   )
   shapes <- recycle_to_length(

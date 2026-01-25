@@ -147,6 +147,8 @@ NULL
 #'   Set to 0 for no extra margin (tighter fit). Affects white space around nodes.
 #' @param aspect Logical: maintain aspect ratio?
 #' @param usePCH Logical: use points() for simple circles (faster). Default FALSE.
+#' @param scaling Scaling mode: "default" for qgraph-matched scaling where node_size=6
+#'   looks similar to qgraph vsize=6, or "legacy" to preserve pre-v2.0 behavior.
 #'
 #' @section Legend:
 #' @param legend Logical: show legend?
@@ -306,6 +308,7 @@ splot <- function(
     layout_margin = 0.15,
     aspect = TRUE,
     usePCH = FALSE,
+    scaling = "default",
 
     # Legend
     legend = FALSE,
@@ -382,11 +385,13 @@ splot <- function(
   # 3. PARAMETER VECTORIZATION
   # ============================================
 
-  # Node sizes (qgraph-style)
-  if (is.null(node_size)) node_size <- 3
-  vsize_usr <- resolve_node_sizes(node_size, n_nodes, default_size = 3, scale_factor = 0.04)
+  # Get scale constants for current scaling mode
+  scale <- get_scale_constants(scaling)
+
+  # Node sizes (qgraph-style, using scale constants)
+  vsize_usr <- resolve_node_sizes(node_size, n_nodes, scaling = scaling)
   vsize2_usr <- if (!is.null(node_size2)) {
-    resolve_node_sizes(node_size2, n_nodes, default_size = 3, scale_factor = 0.04)
+    resolve_node_sizes(node_size2, n_nodes, scaling = scaling)
   } else {
     vsize_usr
   }
@@ -428,11 +433,8 @@ splot <- function(
   # Labels
   node_labels <- resolve_labels(labels, nodes, n_nodes)
 
-  # Label sizes
-  if (is.null(label_size)) {
-    label_size <- pmin(1, vsize_usr * 8)
-  }
-  label_cex <- recycle_to_length(label_size, n_nodes)
+  # Label sizes (using new decoupled system)
+  label_cex <- resolve_label_sizes(label_size, vsize_usr, n_nodes, scaling = scaling)
   label_colors <- recycle_to_length(label_color, n_nodes)
 
   # ============================================
@@ -515,8 +517,8 @@ splot <- function(
       arrows_vec <- recycle_to_length(show_arrows, n_edges)
     }
 
-    # Arrow size (convert from qgraph scale)
-    asize_scaled <- arrow_size * 0.03
+    # Arrow size (using scale constants for consistency)
+    asize_scaled <- arrow_size * scale$arrow_factor
     arrow_sizes <- recycle_to_length(asize_scaled, n_edges)
 
     # Bidirectional

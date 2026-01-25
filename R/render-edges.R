@@ -108,8 +108,10 @@ render_edges_grid <- function(network) {
   }
 
   # Arrow settings
+  # Default arrow_size uses unified scale constant (0.02)
+  # This is already in the correct format - soplot converts user input via scale$arrow_factor
   show_arrows <- if (!is.null(aes$show_arrows)) aes$show_arrows else network$is_directed
-  arrow_size <- if (!is.null(aes$arrow_size)) aes$arrow_size else 0.015
+  arrow_size <- if (!is.null(aes$arrow_size)) aes$arrow_size else SONNET_SCALE$arrow_factor
 
   # Bidirectional arrow settings
   bidirectionals <- recycle_to_length(
