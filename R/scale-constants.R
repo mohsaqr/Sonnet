@@ -125,33 +125,33 @@ get_scale_constants <- function(scaling = "default") {
   }
 }
 
-#' Compute Adaptive Base Edge Size (qgraph-style)
+#' Compute Adaptive Base Edge Size
 #'
-#' Calculates the base edge size that decreases with more nodes,
-#' matching qgraph's adaptive esize formula.
+#' Calculates the maximum edge width that decreases with more nodes.
+#' Inspired by qgraph but scaled for line widths (not pixels).
 #'
 #' @param n_nodes Number of nodes in the network.
 #' @param directed Whether the network is directed (directed networks use thinner edges).
-#' @return Numeric base edge size.
+#' @return Numeric maximum edge width (suitable for lwd parameter).
 #'
 #' @details
-#' The formula is: `esize = 15 * exp(-n_nodes / 90) + 1`
+#' The formula produces reasonable line widths:
+#' - 3 nodes: ~5
+#' - 10 nodes: ~4.5
+#' - 50 nodes: ~3
+#' - 100 nodes: ~2
+#' - 200 nodes: ~1.2
 #'
-#' This produces approximately:
-#' - 10 nodes: ~14
-#' - 50 nodes: ~9
-#' - 100 nodes: ~6
-#' - 200 nodes: ~3
-#'
-#' For directed networks, the esize is halved (with a minimum of 1).
+#' For directed networks, the size is reduced by 30% (minimum 1).
 #'
 #' @keywords internal
 compute_adaptive_esize <- function(n_nodes, directed = FALSE) {
-  # qgraph formula: decreases with more nodes
-  esize <- 15 * exp(-n_nodes / 90) + 1
+  # Scaled formula for reasonable line widths (0.5 to ~6)
+  # Uses gentler decay than qgraph's pixel-based formula
+  esize <- 4 * exp(-n_nodes / 150) + 1.5
 
   if (directed) {
-    esize <- max(esize / 2, 1)
+    esize <- max(esize * 0.7, 1)
   }
 
   esize
@@ -223,13 +223,18 @@ scale_edge_widths <- function(weights,
   abs_weights <- abs(weights)
 
   # Compute adaptive esize if not provided
+  # esize defines the MAXIMUM edge width (qgraph-style)
   if (is.null(esize)) {
     if (!is.null(n_nodes)) {
       esize <- compute_adaptive_esize(n_nodes, directed)
     } else {
-      esize <- 4  # fallback default
+      esize <- range[2]  # use range max as fallback
     }
   }
+
+  # Use esize to set the max of the range (qgraph behavior)
+  # Keep min from range[1], but max comes from esize
+  effective_range <- c(range[1], esize)
 
   # Auto-detect maximum
   if (is.null(maximum)) {
@@ -276,34 +281,31 @@ scale_edge_widths <- function(weights,
   if (cut > 0 && cut < maximum) {
     cut_normalized <- cut / maximum
 
-    # Below cut: map to [range[1], range[1] + small_range]
-    # Above cut: map to [mid_range, range[2]]
-    small_range <- (range[2] - range[1]) * 0.2
-    mid_point <- range[1] + small_range
+    # Below cut: map to [effective_range[1], effective_range[1] + small_range]
+    # Above cut: map to [mid_range, effective_range[2]]
+    small_range <- (effective_range[2] - effective_range[1]) * 0.2
+    mid_point <- effective_range[1] + small_range
 
     widths <- numeric(length(weights))
     below_cut <- normalized < cut_normalized
 
     # Below cut: minimal width variation
     if (any(below_cut)) {
-      widths[below_cut] <- range[1] + (normalized[below_cut] / cut_normalized) * small_range
+      widths[below_cut] <- effective_range[1] + (normalized[below_cut] / cut_normalized) * small_range
     }
 
     # Above cut: scale to full range
     if (any(!below_cut)) {
       above_normalized <- (normalized[!below_cut] - cut_normalized) / (1 - cut_normalized)
-      widths[!below_cut] <- mid_point + above_normalized * (range[2] - mid_point)
+      widths[!below_cut] <- mid_point + above_normalized * (effective_range[2] - mid_point)
     }
   } else {
-    # No cut: simple linear mapping to range
-    widths <- range[1] + normalized * (range[2] - range[1])
+    # No cut: simple linear mapping to effective_range
+    widths <- effective_range[1] + normalized * (effective_range[2] - effective_range[1])
   }
 
   # Apply minimum threshold (set to min width)
-  widths[abs_weights < minimum | is.na(abs_weights)] <- range[1]
-
-  # Scale by esize factor (normalize so esize=4 gives ~1x scaling)
-  widths <- widths * (esize / 4)
+  widths[abs_weights < minimum | is.na(abs_weights)] <- effective_range[1]
 
   widths
 }
