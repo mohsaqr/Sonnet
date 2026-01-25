@@ -23,11 +23,12 @@ draw_straight_edge_base <- function(x1, y1, x2, y2, col = "gray50", lwd = 1,
   # Calculate angle
   angle <- splot_angle(x1, y1, x2, y2)
 
-  # Shorten end point if arrow
+  # qgraph-style: line ends at arrow base midpoint, arrow TIP at node boundary
   if (arrow && asize > 0) {
-    short_end <- shorten_edge_for_arrow(x1, y1, x2, y2, asize * 0.8)
-    line_x2 <- short_end$x
-    line_y2 <- short_end$y
+    # Get arrow base midpoint (where line should end)
+    base_end <- arrow_base_midpoint(x2, y2, angle, asize)
+    line_x2 <- base_end$x
+    line_y2 <- base_end$y
   } else {
     line_x2 <- x2
     line_y2 <- y2
@@ -35,15 +36,16 @@ draw_straight_edge_base <- function(x1, y1, x2, y2, col = "gray50", lwd = 1,
 
   # Shorten start if bidirectional
   if (bidirectional && asize > 0) {
-    short_start <- shorten_edge_for_arrow(x2, y2, x1, y1, asize * 0.8)
-    line_x1 <- short_start$x
-    line_y1 <- short_start$y
+    angle_back <- splot_angle(x2, y2, x1, y1)
+    base_start <- arrow_base_midpoint(x1, y1, angle_back, asize)
+    line_x1 <- base_start$x
+    line_y1 <- base_start$y
   } else {
     line_x1 <- x1
     line_y1 <- y1
   }
 
-  # Draw line
+  # Draw line (ends at arrow base, not at tip)
   graphics::lines(
     x = c(line_x1, line_x2),
     y = c(line_y1, line_y2),
@@ -52,12 +54,12 @@ draw_straight_edge_base <- function(x1, y1, x2, y2, col = "gray50", lwd = 1,
     lty = lty
   )
 
-  # Draw arrow at target
+  # Draw arrow at target (TIP at node boundary)
   if (arrow && asize > 0) {
     draw_arrow_base(x2, y2, angle, asize, col = col)
   }
 
-  # Draw arrow at source if bidirectional
+  # Draw arrow at source if bidirectional (TIP at node boundary)
   if (bidirectional && asize > 0) {
     angle_back <- splot_angle(x2, y2, x1, y1)
     draw_arrow_base(x1, y1, angle_back, asize, col = col)
@@ -103,13 +105,14 @@ draw_curved_edge_base <- function(x1, y1, x2, y2, curve = 0.2, curvePivot = 0.5,
   }
 
 
-  # Perpendicular unit vector (rotated 90 degrees counterclockwise from edge direction)
-  # Counterclockwise rotation: (dx, dy) -> (-dy, dx)
-  px <- -dy / len
-  py <- dx / len
+  # Perpendicular unit vector (rotated 90 degrees clockwise from edge direction)
+  # Clockwise rotation: (dx, dy) -> (dy, -dx)
+  px <- dy / len
+  py <- -dx / len
 
   # qgraph-style: curve offset scales with edge length for proportional appearance
-  curve_offset <- curve * len * 0.3  # Scale factor for visual consistency
+  # Note: negate to match expected visual direction (positive curve = bulge in perp direction)
+  curve_offset <- -curve * len * 0.3  # Scale factor for visual consistency
 
   # Create smooth curve using multiple control points (qgraph approach)
   # Use 5 points for smoother curve: start, 1/4, mid, 3/4, end
@@ -153,29 +156,84 @@ draw_curved_edge_base <- function(x1, y1, x2, y2, curve = 0.2, curvePivot = 0.5,
     draw = FALSE
   )
 
-  # Draw the curve
-  graphics::lines(
-    x = spl$x,
-    y = spl$y,
-    col = col,
-    lwd = lwd,
-    lty = lty
-  )
+  # qgraph-style arrow positioning:
+  # 1. Calculate arrow angle from curve direction
+  # 2. Truncate curve to stop at arrow base
+  # 3. Draw arrow with TIP at node boundary
 
-  # Draw arrow at target - use last segment of spline for angle
   if (arrow && asize > 0) {
     n <- length(spl$x)
-    # Use points closer to end for better angle estimation
+
+    # 1. Calculate arrow angle from last curve segment
     idx <- max(1, n - 3)
-    angle <- splot_angle(spl$x[idx], spl$y[idx], spl$x[n], spl$y[n])
+    angle <- splot_angle(spl$x[idx], spl$y[idx], x2, y2)
+
+    # 2. Find arrow base midpoint (where curve should end)
+    base <- arrow_base_midpoint(x2, y2, angle, asize)
+
+    # 3. Truncate curve: remove points inside arrow radius
+    arrow_rad <- asize  # Arrow extends this far back from tip
+    dists <- sqrt((spl$x - x2)^2 + (spl$y - y2)^2)
+    outside <- dists > arrow_rad
+
+    # Keep only points outside the arrow (qgraph approach)
+    keep_idx <- which(rev(cumsum(rev(outside)) > 0))
+
+    # 4. Draw truncated curve + line to arrow base
+    if (length(keep_idx) > 0) {
+      curve_x <- c(spl$x[keep_idx], base$x)
+      curve_y <- c(spl$y[keep_idx], base$y)
+      graphics::lines(curve_x, curve_y, col = col, lwd = lwd, lty = lty)
+    }
+
+    # 5. Draw arrow with TIP at node boundary (x2, y2)
     draw_arrow_base(x2, y2, angle, asize, col = col)
+  } else {
+    # No arrow - draw full curve
+    graphics::lines(spl$x, spl$y, col = col, lwd = lwd, lty = lty)
   }
 
   # Draw arrow at source if bidirectional
   if (bidirectional && asize > 0) {
-    # Use points closer to start for angle
-    idx <- min(length(spl$x), 4)
-    angle_back <- splot_angle(spl$x[idx], spl$y[idx], spl$x[1], spl$y[1])
+    n <- length(spl$x)
+
+    # Calculate angle from curve start
+    idx <- min(n, 4)
+    angle_back <- splot_angle(spl$x[idx], spl$y[idx], x1, y1)
+
+    # Find arrow base midpoint at source
+    base_start <- arrow_base_midpoint(x1, y1, angle_back, asize)
+
+    # Truncate curve at source: remove points inside arrow radius
+    dists_start <- sqrt((spl$x - x1)^2 + (spl$y - y1)^2)
+    outside_start <- dists_start > asize
+
+    # Keep only points outside the start arrow
+    keep_idx_start <- which(cumsum(outside_start) > 0)
+
+    # Redraw if we need to truncate the start (overwrites previous line)
+    if (length(keep_idx_start) > 0 && length(keep_idx_start) < n) {
+      # Clear and redraw with both ends truncated
+      curve_x <- c(base_start$x, spl$x[keep_idx_start])
+      curve_y <- c(base_start$y, spl$y[keep_idx_start])
+
+      # If target also has arrow, truncate that end too
+      if (arrow && asize > 0) {
+        dists_end <- sqrt((curve_x - x2)^2 + (curve_y - y2)^2)
+        outside_end <- dists_end > asize
+        keep_end <- which(rev(cumsum(rev(outside_end)) > 0))
+        if (length(keep_end) > 0) {
+          angle_fwd <- splot_angle(spl$x[n-3], spl$y[n-3], x2, y2)
+          base_end <- arrow_base_midpoint(x2, y2, angle_fwd, asize)
+          curve_x <- c(curve_x[keep_end], base_end$x)
+          curve_y <- c(curve_y[keep_end], base_end$y)
+        }
+      }
+
+      graphics::lines(curve_x, curve_y, col = col, lwd = lwd, lty = lty)
+    }
+
+    # Draw arrow at source
     draw_arrow_base(x1, y1, angle_back, asize, col = col)
   }
 }
@@ -462,32 +520,8 @@ render_edges_base <- function(edges, layout, node_sizes, shapes = "circle",
     start <- cent_to_edge(x1, y1, angle_to, node_sizes[from_idx], NULL, shapes[from_idx])
     end <- cent_to_edge(x2, y2, angle_from, node_sizes[to_idx], NULL, shapes[to_idx])
 
-    # Determine curve direction
-    # If curve is positive, bend INWARD toward network center
-    # If curve is negative (reciprocal edge), keep it negative (bend outward)
+    # Use curve value as-is (direction already calculated by caller)
     curve_i <- curve[i]
-    if (curve_i > 1e-6) {
-      # Positive curve: determine inward direction toward center
-      mid_x <- (start$x + end$x) / 2
-      mid_y <- (start$y + end$y) / 2
-
-      dx <- end$x - start$x
-      dy <- end$y - start$y
-
-      to_center_x <- center_x - mid_x
-      to_center_y <- center_y - mid_y
-
-      # Cross product: > 0 means center is on left
-      cross <- dx * to_center_y - dy * to_center_x
-
-      # Bend toward center
-      if (cross > 0) {
-        curve_i <- abs(curve_i)   # Bend left toward center
-      } else {
-        curve_i <- -abs(curve_i)  # Bend right toward center
-      }
-    }
-    # If curve is negative, keep it as-is (for reciprocal edges curving outward)
 
     # Draw edge
     if (abs(curve_i) > 1e-6) {

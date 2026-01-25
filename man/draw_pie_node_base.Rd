@@ -35,5 +35,6 @@ draw_pie_node_base(
 }
 \description{
 Renders a node as a pie chart with multiple colored segments.
+The pie is drawn slightly inside the node boundary to leave room for arrows.
 }
 \keyword{internal}

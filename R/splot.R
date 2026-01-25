@@ -702,7 +702,7 @@ render_edges_splot <- function(edges, layout, node_sizes, shapes,
   # Storage for label positions
   label_positions <- vector("list", m)
 
-  # Helper function to calculate curve direction
+  # Helper function to calculate curve direction (bend INWARD toward center)
   calc_curve_direction <- function(curve_val, start_x, start_y, end_x, end_y) {
     if (curve_val > 1e-6) {
       mid_x <- (start_x + end_x) / 2
@@ -711,8 +711,18 @@ render_edges_splot <- function(edges, layout, node_sizes, shapes,
       dy <- end_y - start_y
       to_center_x <- center_x - mid_x
       to_center_y <- center_y - mid_y
-      cross <- dx * to_center_y - dy * to_center_x
-      if (cross > 0) abs(curve_val) else -abs(curve_val)
+
+      # Perpendicular to edge direction (same as draw_curved_edge_base)
+      # Clockwise rotation: (dx, dy) -> (dy, -dx)
+      len <- sqrt(dx^2 + dy^2)
+      if (len < 1e-10) return(curve_val)
+      px <- dy / len
+      py <- -dx / len
+
+      # Dot product: positive = perpendicular points toward center
+      dot <- px * to_center_x + py * to_center_y
+
+      if (dot < 0) -abs(curve_val) else abs(curve_val)
     } else {
       curve_val
     }

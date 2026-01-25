@@ -4,6 +4,44 @@
 #' @keywords internal
 NULL
 
+#' Calculate Arrow Base Midpoint
+#'
+#' Returns the midpoint between the arrow wings (where the curve should end).
+#' This is used to connect the edge line to the back of the arrow head.
+#'
+#' @param x Arrow tip x coordinate.
+#' @param y Arrow tip y coordinate.
+#' @param angle Angle of incoming edge (radians).
+#' @param size Arrow size in user coordinates.
+#' @param width Arrow width ratio (default 0.5).
+#' @return List with x, y coordinates of the arrow base midpoint.
+#' @keywords internal
+arrow_base_midpoint <- function(x, y, angle, size, width = 0.5) {
+  left_angle <- angle + pi - atan(width)
+  right_angle <- angle + pi + atan(width)
+  back_len <- size / cos(atan(width))
+
+  left_x <- x + back_len * cos(left_angle)
+  left_y <- y + back_len * sin(left_angle)
+  right_x <- x + back_len * cos(right_angle)
+  right_y <- y + back_len * sin(right_angle)
+
+  list(x = (left_x + right_x) / 2, y = (left_y + right_y) / 2)
+}
+
+#' Calculate Arrow Radius
+#'
+#' Returns the distance from arrow tip to base midpoint.
+#' This is how far back from the tip the arrow extends.
+#'
+#' @param size Arrow size in user coordinates.
+#' @param width Arrow width ratio (default 0.5).
+#' @return The arrow radius (distance from tip to base).
+#' @keywords internal
+arrow_radius <- function(size, width = 0.5) {
+  size  # The arrow extends 'size' units back from tip
+}
+
 #' Draw Arrow Head
 #'
 #' Draws a filled triangular arrow head at the specified position.
