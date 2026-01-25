@@ -222,36 +222,24 @@ scale_edge_widths <- function(weights,
   # Use absolute values
   abs_weights <- abs(weights)
 
-  # Compute adaptive esize if not provided
-  # esize defines the MAXIMUM edge width (qgraph-style)
-  if (is.null(esize)) {
-    if (!is.null(n_nodes)) {
-      esize <- compute_adaptive_esize(n_nodes, directed)
-    } else {
-      esize <- range[2]  # use range max as fallback
-    }
-  }
 
-  # Use esize to set the max of the range (qgraph behavior)
-  # Keep min from range[1], but max comes from esize
-  effective_range <- c(range[1], esize)
+  # Determine effective range for edge widths
+
+  # Priority: if esize is explicitly provided, it overrides range[2]
+  # Otherwise, use range as-is (respecting user's edge_width_range)
+  if (!is.null(esize)) {
+    # esize explicitly provided - use it as max
+    effective_range <- c(range[1], esize)
+  } else {
+    # No esize - use range directly (user's edge_width_range is respected)
+    effective_range <- range
+  }
 
   # Auto-detect maximum
   if (is.null(maximum)) {
     maximum <- max(abs_weights, na.rm = TRUE)
   }
   if (maximum == 0 || is.na(maximum)) maximum <- 1
-
-  # Auto-compute cut (75th percentile) if NULL
-  if (is.null(cut)) {
-    valid_weights <- abs_weights[abs_weights > minimum & !is.na(abs_weights)]
-    if (length(valid_weights) > 0) {
-      cut <- stats::quantile(valid_weights, 0.75, na.rm = TRUE)
-    } else {
-      cut <- 0
-    }
-    if (is.na(cut)) cut <- 0
-  }
 
   # Apply scaling mode to normalize weights
   normalized <- switch(mode,
@@ -277,32 +265,9 @@ scale_edge_widths <- function(weights,
   # Clamp to [0, 1]
   normalized <- pmin(pmax(normalized, 0), 1)
 
-  # Apply two-tier system if cut > 0
-  if (cut > 0 && cut < maximum) {
-    cut_normalized <- cut / maximum
-
-    # Below cut: map to [effective_range[1], effective_range[1] + small_range]
-    # Above cut: map to [mid_range, effective_range[2]]
-    small_range <- (effective_range[2] - effective_range[1]) * 0.2
-    mid_point <- effective_range[1] + small_range
-
-    widths <- numeric(length(weights))
-    below_cut <- normalized < cut_normalized
-
-    # Below cut: minimal width variation
-    if (any(below_cut)) {
-      widths[below_cut] <- effective_range[1] + (normalized[below_cut] / cut_normalized) * small_range
-    }
-
-    # Above cut: scale to full range
-    if (any(!below_cut)) {
-      above_normalized <- (normalized[!below_cut] - cut_normalized) / (1 - cut_normalized)
-      widths[!below_cut] <- mid_point + above_normalized * (effective_range[2] - mid_point)
-    }
-  } else {
-    # No cut: simple linear mapping to effective_range
-    widths <- effective_range[1] + normalized * (effective_range[2] - effective_range[1])
-  }
+  # Simple proportional mapping to effective_range
+  # (cut parameter now only affects transparency, not width)
+  widths <- effective_range[1] + normalized * (effective_range[2] - effective_range[1])
 
   # Apply minimum threshold (set to min width)
   widths[abs_weights < minimum | is.na(abs_weights)] <- effective_range[1]

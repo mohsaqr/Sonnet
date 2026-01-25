@@ -471,6 +471,19 @@ splot <- function(
       edge_colors <- sapply(edge_colors, function(c) adjust_alpha(c, edge_alpha))
     }
 
+    # Apply cut threshold for transparency: edges below cut are faded
+    if (!is.null(cut) && cut > 0 && "weight" %in% names(edges)) {
+      abs_weights <- abs(edges$weight)
+      below_cut <- abs_weights < cut
+      if (any(below_cut)) {
+        # Scale alpha: edges at 0 get 20% of normal alpha, edges near cut get full alpha
+        fade_factor <- ifelse(below_cut, 0.2 + 0.8 * (abs_weights / cut), 1)
+        edge_colors <- mapply(function(col, fade) {
+          if (fade < 1) adjust_alpha(col, fade) else col
+        }, edge_colors, fade_factor, SIMPLIFY = TRUE, USE.NAMES = FALSE)
+      }
+    }
+
     # Edge widths
     edge_widths <- resolve_edge_widths(
       edges = edges,
@@ -760,8 +773,10 @@ splot <- function(
   # If donut_shape is NULL or "circle" (default), inherit from node_shape
   # Otherwise, use the explicitly set donut_shape
   if (is.null(donut_shape) || identical(donut_shape, "circle")) {
-    # Inherit from node_shape, replacing "donut" with "circle"
-    effective_donut_shapes <- ifelse(shapes == "donut", "circle", shapes)
+    # Inherit from node_shape, replacing special donut shapes with "circle"
+    # donut, donut_pie, double_donut_pie are special shapes that need circle base
+    special_donut_shapes <- c("donut", "donut_pie", "double_donut_pie")
+    effective_donut_shapes <- ifelse(shapes %in% special_donut_shapes, "circle", shapes)
   } else {
     # User explicitly set donut_shape - vectorize and use it
     effective_donut_shapes <- recycle_to_length(donut_shape, n_nodes)

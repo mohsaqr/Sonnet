@@ -69,6 +69,20 @@ render_edges_grid <- function(network) {
     if (!is.null(aes$alpha)) aes$alpha else 0.8,
     m
   )
+
+  # Apply cut threshold for transparency: edges below cut are faded
+  if (!is.null(aes$cut) && aes$cut > 0 && "weight" %in% names(edges)) {
+    cut_val <- aes$cut
+    abs_weights <- abs(edges$weight)
+    # Edges below cut get reduced alpha (pale/faded)
+    below_cut <- abs_weights < cut_val
+    if (any(below_cut)) {
+      # Scale alpha: edges at 0 get 20% of normal alpha, edges near cut get full alpha
+      fade_factor <- ifelse(below_cut, 0.2 + 0.8 * (abs_weights / cut_val), 1)
+      alphas <- alphas * fade_factor
+    }
+  }
+
   styles <- recycle_to_length(
     if (!is.null(aes$style)) aes$style else "solid",
     m

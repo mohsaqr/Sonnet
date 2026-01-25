@@ -323,8 +323,10 @@ soplot <- function(network, title = NULL, title_size = 14,
   # If donut_shape is NULL or "circle" (default), inherit from node_shape
   # Otherwise, use the explicitly set donut_shape
   if (is.null(donut_shape) || identical(donut_shape, "circle")) {
-    # Inherit from node_shape, replacing "donut" with "circle"
-    effective_donut_shapes <- ifelse(shapes == "donut", "circle", shapes)
+    # Inherit from node_shape, replacing special donut shapes with "circle"
+    # donut, donut_pie, double_donut_pie are special shapes that need circle base
+    special_donut_shapes <- c("donut", "donut_pie", "double_donut_pie")
+    effective_donut_shapes <- ifelse(shapes %in% special_donut_shapes, "circle", shapes)
   } else {
     # User explicitly set donut_shape - vectorize and use it
     effective_donut_shapes <- recycle_to_length(donut_shape, n_nodes)
