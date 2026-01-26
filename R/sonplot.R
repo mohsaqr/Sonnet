@@ -20,6 +20,7 @@ NULL
 #'   two-letter codes: "kk", "fr", "drl", "mds", "ni", etc.
 #' @param directed Logical. Force directed interpretation. NULL for auto-detect.
 #' @param seed Random seed for deterministic layouts. Default 42.
+#' @param theme Theme name: "classic", "dark", "minimal", "colorblind", etc.
 #'
 #' @section Node Aesthetics:
 #' @param node_size Node size(s). NULL uses qgraph adaptive formula: 8*exp(-n/80)+1.
@@ -28,6 +29,8 @@ NULL
 #' @param node_shape Node shape(s): "circle", "square", "triangle", "diamond",
 #'   "pentagon", "hexagon", "star", "heart", "ellipse", "cross", or any custom
 #'   SVG shape registered with register_svg_shape().
+#' @param node_svg Custom SVG for nodes: path to SVG file OR inline SVG string.
+#' @param svg_preserve_aspect Logical: maintain SVG aspect ratio? Default TRUE.
 #' @param node_fill Node fill color(s).
 #' @param node_border_color Node border color(s).
 #' @param node_border_width Node border width(s).
@@ -36,18 +39,47 @@ NULL
 #'   or character vector.
 #' @param label_size Label character expansion factor.
 #' @param label_color Label text color.
+#' @param label_position Label position: "center", "above", "below", "left", "right".
+#' @param label_fontface Font face for labels: "plain", "bold", "italic", "bold.italic". Default "plain".
+#' @param label_fontfamily Font family for labels: "sans", "serif", "mono". Default "sans".
+#' @param label_hjust Horizontal justification (0=left, 0.5=center, 1=right). Default 0.5.
+#' @param label_vjust Vertical justification (0=bottom, 0.5=center, 1=top). Default 0.5.
+#' @param label_angle Text rotation angle in degrees. Default 0.
 #'
 #' @section Pie/Donut Nodes:
 #' @param pie_values List of numeric vectors for pie chart nodes.
+#' @param pie_colors List of color vectors for pie segments.
+#' @param pie_border_width Border width for pie slice dividers. NULL uses node_border_width.
 #' @param donut_fill Numeric value (0-1) for donut fill proportion.
 #' @param donut_values Deprecated. Use donut_fill.
+#' @param donut_color Fill color(s) for the donut ring.
+#' @param donut_colors Deprecated. Use donut_color instead.
+#' @param donut_border_color Border color for donut rings. NULL uses node_border_color.
+#' @param donut_border_width Border width for donut rings. NULL uses node_border_width.
 #' @param donut_inner_ratio Inner radius ratio for donut (0-1). Default 0.5.
+#' @param donut_bg_color Background color for unfilled donut portion.
+#' @param donut_shape Base shape for donut: "circle", "square", "hexagon", etc.
+#' @param donut_show_value Logical: show value in donut center? Default FALSE.
+#' @param donut_value_size Font size for donut center value.
+#' @param donut_value_color Color for donut center value.
+#' @param donut_value_fontface Font face for donut center value: "plain", "bold", etc. Default "bold".
+#' @param donut_value_fontfamily Font family for donut center value. Default "sans".
+#' @param donut_value_digits Decimal places for donut center value. Default 2.
+#' @param donut_value_prefix Text before donut center value. Default "".
+#' @param donut_value_suffix Text after donut center value. Default "".
+#' @param donut2_values List of values for inner donut ring (for double donut).
+#' @param donut2_colors List of color vectors for inner donut ring segments.
+#' @param donut2_inner_ratio Inner radius ratio for inner donut ring. Default 0.4.
 #'
 #' @section Edge Aesthetics:
 #' @param edge_color Edge color(s). If NULL, uses positive_color/negative_color.
 #' @param edge_width Edge width(s). If NULL, scales by weight using qgraph formula.
 #' @param esize Base edge size for weight scaling. NULL uses qgraph adaptive formula:
 #'   15*exp(-n/90)+1 (halved for directed networks).
+#' @param edge_width_range Output width range as c(min, max) for weight-based scaling.
+#'   Default c(0.5, 4). Edges are scaled to fit within this range.
+#' @param edge_scale_mode Scaling mode for edge weights: "linear" (default, qgraph-style),
+#'   "log", "sqrt", or "rank".
 #' @param cut qgraph-style cutoff: 0 = continuous scaling (default), positive = threshold.
 #' @param minimum Minimum weight threshold. Edges below this are hidden.
 #' @param maximum Maximum weight for scaling. NULL for auto.
@@ -59,18 +91,65 @@ NULL
 #' @param show_arrows Logical or vector: show arrows on directed edges?
 #' @param positive_color Color for positive weights.
 #' @param negative_color Color for negative weights.
+#' @param edge_start_style Style for the start segment of edges: "solid" (default),
+#'   "dashed", or "dotted". Use dashed/dotted to indicate edge direction.
+#' @param edge_start_length Fraction of edge length for styled start segment (0-0.5).
+#'   Default 0.15.
+#'
+#' @section Edge CI Underlays:
+#' @param edge_ci Numeric vector of CI widths (0-1 scale). Larger values = more uncertainty.
+#' @param edge_ci_scale Width multiplier for underlay thickness. Default 2.
+#' @param edge_ci_alpha Transparency for underlay (0-1). Default 0.15.
+#' @param edge_ci_color Underlay color. NA (default) uses main edge color.
+#' @param edge_ci_style Line type for underlay: 1=solid, 2=dashed, 3=dotted. Default 2.
+#' @param edge_ci_arrows Logical: show arrows on underlay? Default FALSE.
 #'
 #' @section Edge Labels:
 #' @param edge_labels Edge labels: TRUE (show weights), FALSE (none), or character vector.
 #' @param edge_label_size Edge label size.
+#' @param edge_label_color Edge label text color.
+#' @param edge_label_bg Edge label background color.
 #' @param edge_label_position Position along edge (0=start, 0.5=middle, 1=end). Default 0.5.
+#' @param edge_label_offset Perpendicular offset for edge labels (0 = on line).
+#' @param edge_label_fontface Font face: 1=plain, 2=bold, 3=italic.
+#' @param edge_label_shadow Logical: enable drop shadow for edge labels? Default FALSE.
+#' @param edge_label_shadow_color Color for edge label shadow. Default "gray40".
+#' @param edge_label_shadow_offset Offset distance for shadow. Default 0.5.
+#' @param edge_label_shadow_alpha Transparency for shadow (0-1). Default 0.5.
+#'
+#' @section Edge Label Templates:
+#' @param edge_label_style Preset style: "none", "estimate", "full", "range", "stars".
+#' @param edge_label_template Template with placeholders: \{est\}, \{range\}, \{low\}, \{up\}, \{p\}, \{stars\}.
+#' @param edge_label_digits Decimal places for estimates. Default 2.
+#' @param edge_label_oneline Logical: single line format? Default TRUE.
+#' @param edge_label_ci_format CI format: "bracket" for [low, up] or "dash" for low-up.
+#' @param edge_ci_lower Numeric vector of lower CI bounds for labels.
+#' @param edge_ci_upper Numeric vector of upper CI bounds for labels.
+#' @param edge_label_p Numeric vector of p-values for edges.
+#' @param edge_label_p_digits Decimal places for p-values. Default 3.
+#' @param edge_label_p_prefix Prefix for p-values. Default "p=".
+#' @param edge_label_stars Stars for labels: character vector, TRUE (compute from p),
+#'   or numeric (treated as p-values).
 #'
 #' @section Plot Settings:
 #' @param title Plot title.
+#' @param title_size Title font size.
 #' @param margins Margins as c(bottom, left, top, right).
 #' @param background Background color.
 #' @param rescale Logical: rescale layout to [-1, 1]?
+#' @param layout_margin Margin around layout as fraction of range. Default 0.15.
 #' @param aspect Logical: maintain aspect ratio?
+#' @param usePCH Logical: use points() for simple circles (faster). Default FALSE.
+#' @param scaling Scaling mode: "default" for qgraph-matched scaling, or "legacy".
+#'
+#' @section Legend:
+#' @param legend Logical: show legend?
+#' @param legend_position Position: "topright", "topleft", "bottomright", "bottomleft".
+#' @param legend_size Legend text size.
+#' @param legend_edge_colors Logical: show positive/negative edge colors in legend?
+#' @param legend_node_sizes Logical: show node size scale in legend?
+#' @param groups Group assignments for node coloring/legend.
+#' @param node_names Alternative names for legend (separate from labels).
 #'
 #' @section Output:
 #' @param filetype Output format: "default" (screen), "png", "pdf", "svg", "jpeg", "tiff".
@@ -108,11 +187,14 @@ sonplot <- function(
     layout = "spring",
     directed = NULL,
     seed = 42,
+    theme = NULL,
 
     # Node aesthetics (sonnet syntax)
     node_size = NULL,
     node_size2 = NULL,
     node_shape = "circle",
+    node_svg = NULL,
+    svg_preserve_aspect = TRUE,
     node_fill = NULL,
     node_border_color = NULL,
     node_border_width = 1,
@@ -120,20 +202,44 @@ sonplot <- function(
     labels = TRUE,
     label_size = NULL,
     label_color = "black",
+    label_position = "center",
+    label_fontface = "plain",
+    label_fontfamily = "sans",
+    label_hjust = 0.5,
+    label_vjust = 0.5,
+    label_angle = 0,
 
     # Pie/Donut
     pie_values = NULL,
     pie_colors = NULL,
+    pie_border_width = NULL,
     donut_fill = NULL,
     donut_values = NULL,
     donut_color = NULL,
+    donut_colors = NULL,
+    donut_border_color = NULL,
+    donut_border_width = NULL,
     donut_inner_ratio = 0.5,
     donut_bg_color = "gray90",
+    donut_shape = "circle",
+    donut_show_value = FALSE,
+    donut_value_size = 0.8,
+    donut_value_color = "black",
+    donut_value_fontface = "bold",
+    donut_value_fontfamily = "sans",
+    donut_value_digits = 2,
+    donut_value_prefix = "",
+    donut_value_suffix = "",
+    donut2_values = NULL,
+    donut2_colors = NULL,
+    donut2_inner_ratio = 0.4,
 
     # Edge aesthetics (sonnet syntax, qgraph behavior)
     edge_color = NULL,
     edge_width = NULL,
     esize = NULL,
+    edge_width_range = c(0.5, 4),
+    edge_scale_mode = "linear",
     cut = 0,
     minimum = 0,
     maximum = NULL,
@@ -143,6 +249,12 @@ sonplot <- function(
     edge_label_color = "gray30",
     edge_label_bg = "white",
     edge_label_position = 0.5,
+    edge_label_offset = 0,
+    edge_label_fontface = 1,
+    edge_label_shadow = FALSE,
+    edge_label_shadow_color = "gray40",
+    edge_label_shadow_offset = 0.5,
+    edge_label_shadow_alpha = 0.5,
     edge_style = 1,
     curvature = 0,
     curve_scale = TRUE,
@@ -153,6 +265,31 @@ sonplot <- function(
     show_arrows = TRUE,
     bidirectional = FALSE,
     loop_rotation = NULL,
+
+    # Edge Start Style (for direction clarity)
+    edge_start_style = "solid",
+    edge_start_length = 0.15,
+
+    # Edge CI Underlays
+    edge_ci = NULL,
+    edge_ci_scale = 2.0,
+    edge_ci_alpha = 0.15,
+    edge_ci_color = NA,
+    edge_ci_style = 2,
+    edge_ci_arrows = FALSE,
+
+    # Edge Label Templates
+    edge_label_style = "none",
+    edge_label_template = NULL,
+    edge_label_digits = 2,
+    edge_label_oneline = TRUE,
+    edge_label_ci_format = "bracket",
+    edge_ci_lower = NULL,
+    edge_ci_upper = NULL,
+    edge_label_p = NULL,
+    edge_label_p_digits = 3,
+    edge_label_p_prefix = "p=",
+    edge_label_stars = NULL,
 
     # Weight handling
     threshold = 0,
@@ -168,13 +305,16 @@ sonplot <- function(
     layout_margin = 0.15,
     aspect = TRUE,
     usePCH = FALSE,
+    scaling = "default",
 
     # Legend
     legend = FALSE,
     legend_position = "topright",
     legend_size = 0.8,
     legend_edge_colors = TRUE,
+    legend_node_sizes = FALSE,
     groups = NULL,
+    node_names = NULL,
 
     # Output
     filetype = "default",
@@ -196,6 +336,20 @@ sonplot <- function(
 
   # Convert to sonnet_network if needed
   network <- ensure_sonnet_network(x, layout = layout, seed = seed, ...)
+
+  # Apply theme if specified
+  if (!is.null(theme)) {
+    th <- get_theme(theme)
+    if (!is.null(th)) {
+      # Extract theme colors
+      if (is.null(node_fill)) node_fill <- th$get("node_fill")
+      if (is.null(node_border_color)) node_border_color <- th$get("node_border_color")
+      if (is.null(background)) background <- th$get("background")
+      if (label_color == "black") label_color <- th$get("label_color")
+      if (positive_color == "#2E7D32") positive_color <- th$get("edge_positive_color")
+      if (negative_color == "#C62828") negative_color <- th$get("edge_negative_color")
+    }
+  }
 
   nodes <- network$network$get_nodes()
   edges <- network$network$get_edges()
@@ -232,24 +386,30 @@ sonplot <- function(
   # 3. QGRAPH-STYLE NODE SIZING
   # ============================================
 
-  # Use qgraph adaptive formula if node_size not specified
-  if (is.null(node_size)) {
-    node_size <- qgraph_default_vsize(n_nodes)
-  }
+  # Get scale constants for current scaling mode
+  scale <- get_scale_constants(scaling)
 
-  # Get qgraph scale constants
-  qscale <- QGRAPH_SCALE
-
-  # Convert to user coordinates using qgraph-matched scale factor
-  vsize_usr <- recycle_to_length(node_size, n_nodes) * qscale$vsize_factor
+  # Node sizes (qgraph-style, using scale constants)
+  vsize_usr <- resolve_node_sizes(node_size, n_nodes, scaling = scaling)
   vsize2_usr <- if (!is.null(node_size2)) {
-    recycle_to_length(node_size2, n_nodes) * qscale$vsize_factor
+    resolve_node_sizes(node_size2, n_nodes, scaling = scaling)
   } else {
     vsize_usr
   }
 
-  # Node shapes
-  shapes <- recycle_to_length(node_shape, n_nodes)
+  # Node shapes - handle custom SVG if provided
+  if (!is.null(node_svg)) {
+    # Register SVG as a temporary shape
+    temp_svg_name <- paste0("_sonplot_svg_", format(Sys.time(), "%H%M%S"))
+    tryCatch({
+      register_svg_shape(temp_svg_name, node_svg)
+      node_shape <- temp_svg_name
+    }, error = function(e) {
+      warning("Failed to register SVG shape: ", e$message, ". Using default shape.",
+              call. = FALSE)
+    })
+  }
+  shapes <- resolve_shapes(node_shape, n_nodes)
 
   # Node colors
   node_colors <- resolve_node_colors(node_fill, n_nodes, nodes, groups)
@@ -273,12 +433,8 @@ sonplot <- function(
   # Labels
   node_labels <- resolve_labels(labels, nodes, n_nodes)
 
-  # Label sizes - qgraph default is based on node size
-  if (is.null(label_size)) {
-    label_cex <- pmin(1, vsize_usr * 8)
-  } else {
-    label_cex <- recycle_to_length(label_size, n_nodes)
-  }
+  # Label sizes (using new decoupled system)
+  label_cex <- resolve_label_sizes(label_size, vsize_usr, n_nodes, scaling = scaling)
   label_colors <- recycle_to_length(label_color, n_nodes)
 
   # ============================================
@@ -317,37 +473,44 @@ sonplot <- function(
       edge_colors <- sapply(edge_colors, function(c) adjust_alpha(c, edge_alpha))
     }
 
-    # qgraph-style edge width scaling
-    # Use qgraph adaptive esize if not specified
-    if (is.null(esize)) {
-      esize <- qgraph_default_esize(n_nodes, weighted, directed)
+    # Apply cut threshold for transparency: edges below cut are faded
+    if (cut > 0 && "weight" %in% names(edges)) {
+      abs_weights <- abs(edges$weight)
+      below_cut <- abs_weights < cut
+      if (any(below_cut)) {
+        # Scale alpha: edges at 0 get 20% of normal alpha, edges near cut get full alpha
+        fade_factor <- ifelse(below_cut, 0.2 + 0.8 * (abs_weights / cut), 1)
+        edge_colors <- mapply(function(col, fade) {
+          if (fade < 1) adjust_alpha(col, fade) else col
+        }, edge_colors, fade_factor, SIMPLIFY = TRUE, USE.NAMES = FALSE)
+      }
     }
 
-    # Scale esize down to reasonable lwd values (qgraph's internal units != lwd)
-    # Use 0.25 factor to match splot/soplot edge_width_range (max ~4 lwd)
-    esize_scaled <- esize * 0.25
-
-    # Edge widths
-    if (!is.null(edge_width)) {
-      edge_widths <- recycle_to_length(edge_width, n_edges)
-    } else if ("weight" %in% names(edges)) {
-      # Use qgraph-exact scaling formula with scaled esize
-      edge_widths <- qgraph_scale_edge_widths(
-        weights = edges$weight,
-        minimum = effective_threshold,
-        maximum = maximum,
-        cut = cut,
-        esize = esize_scaled
-      )
-    } else {
-      edge_widths <- rep(qscale$esize_unweighted, n_edges)
-    }
+    # Edge widths (using resolve_edge_widths for proper scaling)
+    edge_widths <- resolve_edge_widths(
+      edges = edges,
+      edge.width = edge_width,
+      esize = esize,
+      n_nodes = n_nodes,
+      directed = directed,
+      maximum = maximum,
+      minimum = effective_threshold,
+      cut = cut,
+      edge_width_range = edge_width_range,
+      edge_scale_mode = edge_scale_mode,
+      scaling = scaling
+    )
 
     # Line types
     ltys <- recycle_to_length(edge_style, n_edges)
 
-    # Handle curves mode
-    curves_vec <- recycle_to_length(curvature, n_edges)
+    # Handle curves mode:
+    # FALSE = all straight
+    # TRUE or "mutual" = only reciprocal edges curved (opposite directions)
+    # "force" = all edges curved
+    #
+    # curvature parameter sets the MAGNITUDE of curves (default 0.25)
+    # curves parameter controls WHICH edges get curved
     is_reciprocal <- rep(FALSE, n_edges)
 
     # Identify reciprocal pairs
@@ -363,17 +526,20 @@ sonplot <- function(
       }
     }
 
-    # Default curvature for mutual/reciprocal edges (qgraph-style)
-    # Increased from 0.3 to 0.5 for better visibility
-    default_curve <- 0.5
+    # Curve magnitude (user-specified or default 0.25)
+    curve_magnitude <- if (curvature == 0) 0.25 else abs(curvature)
+
+    # Initialize curves vector to 0 (straight)
+    curves_vec <- rep(0, n_edges)
 
     # Calculate network center for curve direction
     center_x <- mean(layout_mat[, 1])
     center_y <- mean(layout_mat[, 2])
 
     if (identical(curves, TRUE) || identical(curves, "mutual")) {
+      # Curve reciprocal edges with direction based on network center
       for (i in seq_len(n_edges)) {
-        if (is_reciprocal[i] && curves_vec[i] == 0) {
+        if (is_reciprocal[i]) {
           # Calculate edge midpoint
           from_idx <- edges$from[i]
           to_idx <- edges$to[i]
@@ -397,22 +563,20 @@ sonplot <- function(
           # Lower index node gets the curve pointing AWAY from center (outer curve)
           # Higher index node gets the curve pointing TOWARD center (inner curve)
           if (edges$from[i] < edges$to[i]) {
-            # This edge should curve OUTWARD (away from center)
-            curves_vec[i] <- if (dist_to_center_pos > dist_to_center_orig) default_curve else -default_curve
+            curves_vec[i] <- if (dist_to_center_pos > dist_to_center_orig) curve_magnitude else -curve_magnitude
           } else {
-            # This edge should curve INWARD (toward center)
-            curves_vec[i] <- if (dist_to_center_pos < dist_to_center_orig) default_curve else -default_curve
+            curves_vec[i] <- if (dist_to_center_pos < dist_to_center_orig) curve_magnitude else -curve_magnitude
           }
         }
       }
     } else if (identical(curves, "force")) {
+      # Curve all edges with the specified magnitude
       for (i in seq_len(n_edges)) {
-        if (edges$from[i] == edges$to[i]) next
-        if (curves_vec[i] == 0) {
-          curves_vec[i] <- default_curve
-        }
+        if (edges$from[i] == edges$to[i]) next  # Skip self-loops
+        curves_vec[i] <- curve_magnitude
       }
     }
+    # If curves = FALSE, curves_vec stays at 0 (straight edges)
 
     curve_pivots <- recycle_to_length(curve_pivot, n_edges)
     curve_shapes <- recycle_to_length(curve_shape, n_edges)
@@ -424,8 +588,8 @@ sonplot <- function(
       arrows_vec <- recycle_to_length(show_arrows, n_edges)
     }
 
-    # Arrow size - qgraph style
-    asize_scaled <- arrow_size * qscale$arrow_factor
+    # Arrow size (using scale constants for consistency)
+    asize_scaled <- arrow_size * scale$arrow_factor
     arrow_sizes <- recycle_to_length(asize_scaled, n_edges)
 
     # Bidirectional
@@ -434,8 +598,40 @@ sonplot <- function(
     # Loop rotation
     loop_rotations <- resolve_loop_rotation(loop_rotation, edges, layout_mat)
 
-    # Edge labels
-    edge_labels_vec <- resolve_edge_labels(edge_labels, edges, n_edges)
+    # Edge labels - check for template system first
+    if (!is.null(edge_label_template) || edge_label_style != "none") {
+      # Use template-based labels
+      edge_weights <- if ("weight" %in% names(edges)) edges$weight else NULL
+      edge_labels_vec <- build_edge_labels_from_template(
+        template = edge_label_template,
+        style = edge_label_style,
+        weights = edge_weights,
+        ci_lower = edge_ci_lower,
+        ci_upper = edge_ci_upper,
+        p_values = edge_label_p,
+        stars = edge_label_stars,
+        digits = edge_label_digits,
+        p_digits = edge_label_p_digits,
+        p_prefix = edge_label_p_prefix,
+        ci_format = edge_label_ci_format,
+        oneline = edge_label_oneline,
+        n = n_edges
+      )
+    } else {
+      # Use standard edge labels
+      edge_labels_vec <- resolve_edge_labels(edge_labels, edges, n_edges)
+    }
+
+    # CI underlay parameters
+    edge_ci_vec <- if (!is.null(edge_ci)) recycle_to_length(edge_ci, n_edges) else NULL
+    edge_ci_colors <- if (!is.null(edge_ci_vec)) {
+      if (is.na(edge_ci_color)) {
+        # Use main edge colors
+        edge_colors
+      } else {
+        recycle_to_length(edge_ci_color, n_edges)
+      }
+    } else NULL
   }
 
   # ============================================
@@ -515,7 +711,7 @@ sonplot <- function(
   # ============================================
 
   if (n_edges > 0) {
-    sonplot_render_edges(
+    render_edges_splot(
       edges = edges,
       layout = layout_mat,
       node_sizes = vsize_usr,
@@ -534,7 +730,24 @@ sonplot <- function(
       edge_label_size = edge_label_size,
       edge_label_color = edge_label_color,
       edge_label_bg = edge_label_bg,
-      edge_label_position = edge_label_position
+      edge_label_position = edge_label_position,
+      edge_label_offset = edge_label_offset,
+      edge_label_fontface = edge_label_fontface,
+      edge_label_shadow = edge_label_shadow,
+      edge_label_shadow_color = edge_label_shadow_color,
+      edge_label_shadow_offset = edge_label_shadow_offset,
+      edge_label_shadow_alpha = edge_label_shadow_alpha,
+      # CI underlay parameters
+      edge_ci = edge_ci_vec,
+      edge_ci_scale = edge_ci_scale,
+      edge_ci_alpha = edge_ci_alpha,
+      edge_ci_color = edge_ci_colors,
+      edge_ci_style = edge_ci_style,
+      edge_ci_arrows = edge_ci_arrows,
+      is_reciprocal = is_reciprocal,
+      # Edge start style parameters
+      edge_start_style = edge_start_style,
+      edge_start_length = edge_start_length
     )
   }
 
@@ -542,7 +755,15 @@ sonplot <- function(
   # 7. RENDER NODES
   # ============================================
 
-  # Handle donut nodes (similar to splot)
+  # Auto-enable donut fill when node_shape is "donut" but no fill specified
+  if (is.null(donut_fill) && is.null(donut_values)) {
+    if (any(shapes == "donut")) {
+      # Create per-node fill: 1.0 for donut nodes, NA for others
+      donut_fill <- ifelse(shapes == "donut", 1.0, NA)
+    }
+  }
+
+  # Handle donut_fill: convert to list format if provided
   effective_donut_values <- donut_values
   if (!is.null(donut_fill)) {
     if (!is.list(donut_fill)) {
@@ -553,21 +774,49 @@ sonplot <- function(
     }
   }
 
+  # Handle donut_color (new simplified API) and donut_colors (deprecated)
   effective_donut_colors <- NULL
   effective_bg_color <- donut_bg_color
 
   if (!is.null(donut_color)) {
-    if (length(donut_color) == 2) {
+    if (is.list(donut_color) && length(donut_color) == 2 * n_nodes) {
+      # List with 2×n_nodes: per-node (fill, bg) pairs - extract odd indices for fill
+      effective_donut_colors <- as.list(donut_color[seq(1, 2 * n_nodes, by = 2)])
+    } else if (length(donut_color) == 2) {
+      # Two colors: fill + background for ALL nodes
       effective_donut_colors <- as.list(rep(donut_color[1], n_nodes))
       effective_bg_color <- donut_color[2]
     } else if (length(donut_color) == 1) {
+      # Single color: fill for all nodes
       effective_donut_colors <- as.list(rep(donut_color, n_nodes))
     } else {
+      # Multiple colors (not 2): treat as per-node fill colors
       cols <- recycle_to_length(donut_color, n_nodes)
       effective_donut_colors <- as.list(cols)
     }
-  } else if (!is.null(effective_donut_values)) {
+  } else if (!is.null(donut_colors)) {
+    # Deprecated: use old donut_colors parameter
+    effective_donut_colors <- donut_colors
+  } else if (any(shapes == "donut") || !is.null(effective_donut_values)) {
+    # Default fill color: light gray when donuts are being used
     effective_donut_colors <- as.list(rep("lightgray", n_nodes))
+  }
+
+  # Determine effective donut shapes - inherit from node_shape by default
+  if (is.null(donut_shape) || identical(donut_shape, "circle")) {
+    # Inherit from node_shape, replacing special donut shapes with "circle"
+    special_donut_shapes <- c("donut", "donut_pie", "double_donut_pie")
+    effective_donut_shapes <- ifelse(shapes %in% special_donut_shapes, "circle", shapes)
+  } else {
+    # User explicitly set donut_shape - vectorize and use it
+    effective_donut_shapes <- recycle_to_length(donut_shape, n_nodes)
+  }
+
+  # Vectorize donut_border_color for per-node support
+  effective_donut_border_color <- if (!is.null(donut_border_color)) {
+    recycle_to_length(donut_border_color, n_nodes)
+  } else {
+    NULL
   }
 
   render_nodes_splot(
@@ -580,34 +829,34 @@ sonplot <- function(
     node_border_width = border_widths,
     pie_values = pie_values,
     pie_colors = pie_colors,
-    pie_border_width = NULL,
+    pie_border_width = pie_border_width,
     donut_values = effective_donut_values,
     donut_colors = effective_donut_colors,
-    donut_border_color = NULL,
-    donut_border_width = NULL,
+    donut_border_color = effective_donut_border_color,
+    donut_border_width = donut_border_width,
     donut_inner_ratio = donut_inner_ratio,
     donut_bg_color = effective_bg_color,
-    donut_shape = "circle",
-    donut_show_value = FALSE,
-    donut_value_size = 0.8,
-    donut_value_color = "black",
-    donut_value_fontface = "bold",
-    donut_value_fontfamily = "sans",
-    donut_value_digits = 2,
-    donut_value_prefix = "",
-    donut_value_suffix = "",
-    donut2_values = NULL,
-    donut2_colors = NULL,
-    donut2_inner_ratio = 0.4,
+    donut_shape = effective_donut_shapes,
+    donut_show_value = donut_show_value,
+    donut_value_size = donut_value_size,
+    donut_value_color = donut_value_color,
+    donut_value_fontface = donut_value_fontface,
+    donut_value_fontfamily = donut_value_fontfamily,
+    donut_value_digits = donut_value_digits,
+    donut_value_prefix = donut_value_prefix,
+    donut_value_suffix = donut_value_suffix,
+    donut2_values = donut2_values,
+    donut2_colors = donut2_colors,
+    donut2_inner_ratio = donut2_inner_ratio,
     labels = node_labels,
     label_size = label_cex,
     label_color = label_colors,
-    label_position = "center",
-    label_fontface = "plain",
-    label_fontfamily = "sans",
-    label_hjust = 0.5,
-    label_vjust = 0.5,
-    label_angle = 0,
+    label_position = label_position,
+    label_fontface = label_fontface,
+    label_fontfamily = label_fontfamily,
+    label_hjust = label_hjust,
+    label_vjust = label_vjust,
+    label_angle = label_angle,
     usePCH = usePCH
   )
 
@@ -616,6 +865,7 @@ sonplot <- function(
   # ============================================
 
   if (legend) {
+    # Determine if we have positive/negative weighted edges
     has_pos_edges <- FALSE
     has_neg_edges <- FALSE
     if (n_edges > 0 && "weight" %in% names(edges)) {
@@ -625,7 +875,7 @@ sonplot <- function(
 
     render_legend_splot(
       groups = groups,
-      node_names = NULL,
+      node_names = node_names,
       nodes = nodes,
       node_colors = node_colors,
       position = legend_position,
@@ -635,7 +885,7 @@ sonplot <- function(
       negative_color = negative_color,
       has_pos_edges = has_pos_edges,
       has_neg_edges = has_neg_edges,
-      show_node_sizes = FALSE,
+      show_node_sizes = legend_node_sizes,
       node_size = vsize_usr
     )
   }
@@ -645,124 +895,4 @@ sonplot <- function(
   # ============================================
 
   invisible(network)
-}
-
-
-#' Render Edges for sonplot (qgraph-compatible)
-#'
-#' Edge rendering using qgraph-compatible geometry calculations.
-#'
-#' @keywords internal
-sonplot_render_edges <- function(edges, layout, node_sizes, shapes,
-                                  edge_color, edge_width, edge_style, curvature,
-                                  curve_shape, curve_pivot, show_arrows, arrow_size,
-                                  bidirectional, loop_rotation, edge_labels,
-                                  edge_label_size, edge_label_color, edge_label_bg,
-                                  edge_label_position = 0.5) {
-
-  m <- nrow(edges)
-  if (m == 0) return(invisible())
-
-  n <- nrow(layout)
-
-  # Calculate network center for inward curve direction
-  center_x <- mean(layout[, 1])
-  center_y <- mean(layout[, 2])
-
-  # Get render order (weakest to strongest)
-  order_idx <- get_edge_order(edges)
-
-  # Storage for label positions
-  label_positions <- vector("list", m)
-
-  for (i in order_idx) {
-    from_idx <- edges$from[i]
-    to_idx <- edges$to[i]
-
-    x1 <- layout[from_idx, 1]
-    y1 <- layout[from_idx, 2]
-    x2 <- layout[to_idx, 1]
-    y2 <- layout[to_idx, 2]
-
-    # Self-loop
-    if (from_idx == to_idx) {
-      draw_self_loop_base(
-        x1, y1, node_sizes[from_idx],
-        col = edge_color[i],
-        lwd = edge_width[i],
-        lty = edge_style[i],
-        rotation = loop_rotation[i],
-        arrow = show_arrows[i],
-        asize = arrow_size[i]
-      )
-
-      loop_dist <- node_sizes[from_idx] * 2.5
-      label_positions[[i]] <- list(
-        x = x1 + loop_dist * cos(loop_rotation[i]),
-        y = y1 + loop_dist * sin(loop_rotation[i])
-      )
-      next
-    }
-
-    # Calculate edge endpoints using qgraph-compatible formula
-    angle_to <- splot_angle(x1, y1, x2, y2)
-    angle_from <- splot_angle(x2, y2, x1, y1)
-
-    start <- qgraph_cent_to_edge_simple(x1, y1, angle_to, node_sizes[from_idx], shapes[from_idx])
-    end <- qgraph_cent_to_edge_simple(x2, y2, angle_from, node_sizes[to_idx], shapes[to_idx])
-
-    # Use the curvature value directly (already set correctly for mutual edges)
-    curve_i <- curvature[i]
-
-    # Draw edge
-    if (abs(curve_i) > 1e-6) {
-      draw_curved_edge_base(
-        start$x, start$y, end$x, end$y,
-        curve = curve_i,
-        curvePivot = curve_pivot[i],
-        col = edge_color[i],
-        lwd = edge_width[i],
-        lty = edge_style[i],
-        arrow = show_arrows[i],
-        asize = arrow_size[i],
-        bidirectional = bidirectional[i]
-      )
-    } else {
-      draw_straight_edge_base(
-        start$x, start$y, end$x, end$y,
-        col = edge_color[i],
-        lwd = edge_width[i],
-        lty = edge_style[i],
-        arrow = show_arrows[i],
-        asize = arrow_size[i],
-        bidirectional = bidirectional[i]
-      )
-    }
-
-    # Store label position
-    label_positions[[i]] <- get_edge_label_position(
-      start$x, start$y, end$x, end$y,
-      position = edge_label_position,
-      curve = curve_i,
-      curvePivot = curve_pivot[i],
-      label_offset = 0  # On the line, not offset
-    )
-  }
-
-  # Draw edge labels
-  if (!is.null(edge_labels)) {
-    for (i in seq_len(m)) {
-      if (!is.null(edge_labels[i]) && !is.na(edge_labels[i]) && edge_labels[i] != "") {
-        pos <- label_positions[[i]]
-        draw_edge_label_base(
-          pos$x, pos$y,
-          label = edge_labels[i],
-          cex = edge_label_size,
-          col = edge_label_color,
-          bg = edge_label_bg,
-          font = 1
-        )
-      }
-    }
-  }
 }
