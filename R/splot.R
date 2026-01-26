@@ -119,6 +119,10 @@ NULL
 #' @param show_arrows Logical or vector: show arrows on directed edges?
 #' @param bidirectional Logical or vector: show arrows at both ends?
 #' @param loop_rotation Angle(s) in radians for self-loop direction.
+#' @param edge_start_style Style for the start segment of edges: "solid" (default),
+#'   "dashed", or "dotted". Use dashed/dotted to indicate edge direction (source node).
+#' @param edge_start_length Fraction of edge length for the styled start segment (0-0.5).
+#'   Default 0.15 (15% of edge). Only applies when edge_start_style is not "solid".
 #'
 #' @section Edge CI Underlays:
 #' @param edge_ci Numeric vector of CI widths (0-1 scale). Larger values = more uncertainty.
@@ -288,6 +292,10 @@ splot <- function(
     show_arrows = TRUE,
     bidirectional = FALSE,
     loop_rotation = NULL,
+
+    # Edge Start Style (for direction clarity)
+    edge_start_style = "solid",
+    edge_start_length = 0.15,
 
     # Edge CI Underlays
     edge_ci = NULL,
@@ -465,18 +473,14 @@ splot <- function(
   }
 
   # ============================================
-  # QGRAPH-STYLE DOUBLE CURVED EDGES FOR UNDIRECTED NETWORKS
+  # EDGE CURVING BEHAVIOR
   # ============================================
-  # For undirected networks with curves enabled, duplicate edges to create
-  # double curved visual representation (like qgraph)
-  if (n_edges > 0 && !directed && (identical(curves, TRUE) || identical(curves, "mutual"))) {
-    # Duplicate each edge with reversed direction
-    reverse_edges <- edges
-    reverse_edges$from <- edges$to
-    reverse_edges$to <- edges$from
-    edges <- rbind(edges, reverse_edges)
-    n_edges <- nrow(edges)
-  }
+  # curves = TRUE (default): single edges straight, reciprocal edges curved
+  # curves = "force": all edges curved
+  # curves = FALSE: all edges straight
+  #
+  # NOTE: We no longer duplicate edges for undirected networks.
+  # Only edges with actual reciprocal pairs (A→B AND B→A) will curve.
 
   if (n_edges > 0) {
     # Edge colors
@@ -522,7 +526,9 @@ splot <- function(
     # FALSE = all straight
     # TRUE or "mutual" = only reciprocal edges curved (opposite directions)
     # "force" = all edges curved (reciprocals opposite, singles inward)
-    curves_vec <- recycle_to_length(curvature, n_edges)
+    #
+    # curvature parameter sets the MAGNITUDE of curves (default 0.25)
+    # curves parameter controls WHICH edges get curved
     is_reciprocal <- rep(FALSE, n_edges)
 
     # Identify reciprocal pairs
@@ -538,8 +544,11 @@ splot <- function(
       }
     }
 
-    # Default curvature - increased from 0.2 to 0.5 for better visibility (qgraph-style)
-    default_curve <- 0.5
+    # Curve magnitude (user-specified or default 0.25)
+    curve_magnitude <- if (curvature == 0) 0.25 else abs(curvature)
+
+    # Initialize curves vector to 0 (straight)
+    curves_vec <- rep(0, n_edges)
 
     # Calculate network center for curve direction
     center_x <- mean(layout_mat[, 1])
@@ -548,7 +557,7 @@ splot <- function(
     if (identical(curves, TRUE) || identical(curves, "mutual")) {
       # Curve reciprocal edges with direction based on network center
       for (i in seq_len(n_edges)) {
-        if (is_reciprocal[i] && curves_vec[i] == 0) {
+        if (is_reciprocal[i]) {
           # Calculate edge midpoint
           from_idx <- edges$from[i]
           to_idx <- edges$to[i]
@@ -573,20 +582,18 @@ splot <- function(
           # Higher index node gets the curve pointing TOWARD center (inner curve)
           if (edges$from[i] < edges$to[i]) {
             # This edge should curve OUTWARD (away from center)
-            curves_vec[i] <- if (dist_to_center_pos > dist_to_center_orig) default_curve else -default_curve
+            curves_vec[i] <- if (dist_to_center_pos > dist_to_center_orig) curve_magnitude else -curve_magnitude
           } else {
             # This edge should curve INWARD (toward center)
-            curves_vec[i] <- if (dist_to_center_pos < dist_to_center_orig) default_curve else -default_curve
+            curves_vec[i] <- if (dist_to_center_pos < dist_to_center_orig) curve_magnitude else -curve_magnitude
           }
         }
       }
     } else if (identical(curves, "force")) {
-      # Curve all edges
+      # Curve all edges with the specified magnitude
       for (i in seq_len(n_edges)) {
         if (edges$from[i] == edges$to[i]) next  # Skip self-loops
-        if (curves_vec[i] == 0) {
-          curves_vec[i] <- default_curve
-        }
+        curves_vec[i] <- curve_magnitude
       }
     }
     # If curves = FALSE, curves_vec stays at 0 (straight edges)
@@ -756,7 +763,11 @@ splot <- function(
       edge_ci_alpha = edge_ci_alpha,
       edge_ci_color = edge_ci_colors,
       edge_ci_style = edge_ci_style,
-      edge_ci_arrows = edge_ci_arrows
+      edge_ci_arrows = edge_ci_arrows,
+      is_reciprocal = is_reciprocal,
+      # Edge start style parameters
+      edge_start_style = edge_start_style,
+      edge_start_length = edge_start_length
     )
   }
 
@@ -926,7 +937,9 @@ render_edges_splot <- function(edges, layout, node_sizes, shapes,
                                edge_label_shadow_offset = 0.5, edge_label_shadow_alpha = 0.5,
                                edge_ci = NULL, edge_ci_scale = 2.0,
                                edge_ci_alpha = 0.15, edge_ci_color = NULL,
-                               edge_ci_style = 2, edge_ci_arrows = FALSE) {
+                               edge_ci_style = 2, edge_ci_arrows = FALSE,
+                               is_reciprocal = NULL,
+                               edge_start_style = "solid", edge_start_length = 0.15) {
 
   m <- nrow(edges)
   if (m == 0) return(invisible())
@@ -942,6 +955,15 @@ render_edges_splot <- function(edges, layout, node_sizes, shapes,
 
   # Storage for label positions
   label_positions <- vector("list", m)
+
+  # Convert edge_start_style to numeric lty
+  start_lty <- switch(edge_start_style,
+    "solid" = 1,
+    "dashed" = 2,
+    "dotted" = 3,
+    1  # default to solid
+  )
+  start_fraction <- if (start_lty == 1) 0 else edge_start_length
 
   # Helper function to calculate curve direction (bend INWARD toward center)
   calc_curve_direction <- function(curve_val, start_x, start_y, end_x, end_y) {
@@ -1024,8 +1046,14 @@ render_edges_splot <- function(edges, layout, node_sizes, shapes,
     start <- cent_to_edge(x1, y1, angle_to, node_sizes[from_idx], NULL, shapes[from_idx])
     end <- cent_to_edge(x2, y2, angle_from, node_sizes[to_idx], NULL, shapes[to_idx])
 
-    # Determine curve direction for inward bending
-    curve_i <- calc_curve_direction(curvature[i], start$x, start$y, end$x, end$y)
+    # Determine curve direction
+    # For reciprocal edges, use pre-computed curvature directly (preserves opposite directions)
+    # For non-reciprocal edges, apply inward curve direction adjustment
+    if (!is.null(is_reciprocal) && is_reciprocal[i]) {
+      curve_i <- curvature[i]
+    } else {
+      curve_i <- calc_curve_direction(curvature[i], start$x, start$y, end$x, end$y)
+    }
 
     # PASS 1: Draw CI underlay (if edge_ci provided)
     if (!is.null(edge_ci) && !is.na(edge_ci[i]) && edge_ci[i] > 0) {
@@ -1069,7 +1097,9 @@ render_edges_splot <- function(edges, layout, node_sizes, shapes,
         lty = edge_style[i],
         arrow = show_arrows[i],
         asize = arrow_size[i],
-        bidirectional = bidirectional[i]
+        bidirectional = bidirectional[i],
+        start_lty = start_lty,
+        start_fraction = start_fraction
       )
     } else {
       draw_straight_edge_base(
@@ -1079,7 +1109,9 @@ render_edges_splot <- function(edges, layout, node_sizes, shapes,
         lty = edge_style[i],
         arrow = show_arrows[i],
         asize = arrow_size[i],
-        bidirectional = bidirectional[i]
+        bidirectional = bidirectional[i],
+        start_lty = start_lty,
+        start_fraction = start_fraction
       )
     }
 
