@@ -123,6 +123,7 @@ NULL
 #' )
 soplot <- function(network, title = NULL, title_size = 14,
                       margins = c(0.05, 0.05, 0.1, 0.05),
+                      layout_margin = 0.15,
                       newpage = TRUE,
                       # Layout and theme
                       layout = NULL,
@@ -245,6 +246,25 @@ soplot <- function(network, title = NULL, title_size = 14,
     if (!is.null(edges_df) && nrow(edges_df) > 0 && !is.null(edges_df$weight)) {
       keep <- abs(edges_df$weight) >= threshold
       edges_df <- edges_df[keep, , drop = FALSE]
+      net$set_edges(edges_df)
+    }
+  }
+
+  # ============================================
+  # QGRAPH-STYLE DOUBLE CURVED EDGES FOR UNDIRECTED NETWORKS
+  # ============================================
+  # For undirected networks with curves enabled, duplicate edges to create
+  # double curved visual representation (like qgraph)
+  effective_curves <- curves %||% TRUE
+  if (!network$network$is_directed && (identical(effective_curves, TRUE) || identical(effective_curves, "mutual"))) {
+    net <- network$network
+    edges_df <- net$get_edges()
+    if (!is.null(edges_df) && nrow(edges_df) > 0) {
+      # Duplicate each edge with reversed direction
+      reverse_edges <- edges_df
+      reverse_edges$from <- edges_df$to
+      reverse_edges$to <- edges_df$from
+      edges_df <- rbind(edges_df, reverse_edges)
       net$set_edges(edges_df)
     }
   }
@@ -449,14 +469,15 @@ soplot <- function(network, title = NULL, title_size = 14,
       y_range <- range(y, na.rm = TRUE)
 
       # Handle constant values
+      margin <- layout_margin
       if (diff(x_range) > 1e-10) {
-        nodes$x <- 0.1 + 0.8 * (x - x_range[1]) / diff(x_range)
+        nodes$x <- margin + (1 - 2*margin) * (x - x_range[1]) / diff(x_range)
       } else {
         nodes$x <- rep(0.5, nrow(nodes))
       }
 
       if (diff(y_range) > 1e-10) {
-        nodes$y <- 0.1 + 0.8 * (y - y_range[1]) / diff(y_range)
+        nodes$y <- margin + (1 - 2*margin) * (y - y_range[1]) / diff(y_range)
       } else {
         nodes$y <- rep(0.5, nrow(nodes))
       }

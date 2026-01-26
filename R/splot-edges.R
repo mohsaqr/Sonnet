@@ -381,7 +381,7 @@ draw_edge_label_base <- function(x, y, label, cex = 0.8, col = "gray30",
 #' @keywords internal
 get_edge_label_position <- function(x1, y1, x2, y2, position = 0.5,
                                     curve = 0, curvePivot = 0.5,
-                                    label_offset = 0.03) {
+                                    label_offset = 0) {
   # Edge vector and length
   dx <- x2 - x1
   dy <- y2 - y1

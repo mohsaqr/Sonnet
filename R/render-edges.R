@@ -114,14 +114,46 @@ render_edges_grid <- function(network) {
       }
     }
 
-    # Curve reciprocal edges in OPPOSITE directions (ellipse shape)
-    reciprocal_offset <- 0.18
+    # Curve reciprocal edges with direction based on network center (qgraph-style)
+    # Increased from 0.18 to 0.5 for better visibility
+    default_curve <- 0.5
+
+    # Calculate network center for curve direction
+    center_x <- mean(nodes$x)
+    center_y <- mean(nodes$y)
+
     for (i in seq_len(m)) {
       if (is_reciprocal[i] && curvatures[i] == 0) {
         from_i <- edges$from[i]
         to_i <- edges$to[i]
-        # Opposite directions: lower index gets positive curve
-        curvatures[i] <- if (from_i < to_i) reciprocal_offset else -reciprocal_offset
+
+        # Calculate edge midpoint
+        mid_x <- (nodes$x[from_i] + nodes$x[to_i]) / 2
+        mid_y <- (nodes$y[from_i] + nodes$y[to_i]) / 2
+
+        # Calculate perpendicular direction (for curve)
+        dx <- nodes$x[to_i] - nodes$x[from_i]
+        dy <- nodes$y[to_i] - nodes$y[from_i]
+
+        # Perpendicular vector (rotated 90 degrees)
+        perp_x <- -dy
+        perp_y <- dx
+
+        # Check if positive curve moves toward or away from center
+        test_x <- mid_x + perp_x * 0.1
+        test_y <- mid_y + perp_y * 0.1
+        dist_to_center_pos <- sqrt((test_x - center_x)^2 + (test_y - center_y)^2)
+        dist_to_center_orig <- sqrt((mid_x - center_x)^2 + (mid_y - center_y)^2)
+
+        # Lower index node gets the curve pointing AWAY from center (outer curve)
+        # Higher index node gets the curve pointing TOWARD center (inner curve)
+        if (from_i < to_i) {
+          # This edge should curve OUTWARD (away from center)
+          curvatures[i] <- if (dist_to_center_pos > dist_to_center_orig) default_curve else -default_curve
+        } else {
+          # This edge should curve INWARD (toward center)
+          curvatures[i] <- if (dist_to_center_pos < dist_to_center_orig) default_curve else -default_curve
+        }
       }
     }
 
@@ -132,7 +164,7 @@ render_edges_grid <- function(network) {
         to_i <- edges$to[i]
         if (is_reciprocal[i] || from_i == to_i) next
         if (curvatures[i] == 0) {
-          curvatures[i] <- 0.15  # Positive curve, will be adjusted for inward direction
+          curvatures[i] <- default_curve
         }
       }
     }

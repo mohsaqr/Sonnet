@@ -102,6 +102,7 @@ NULL
 #' @param edge_label_color Edge label text color.
 #' @param edge_label_bg Edge label background color.
 #' @param edge_label_position Position along edge (0-1).
+#' @param edge_label_offset Perpendicular offset for edge labels (0 = on line, positive = above).
 #' @param edge_label_fontface Font face: 1=plain, 2=bold, 3=italic.
 #' @param edge_label_shadow Logical: enable drop shadow for edge labels? Default FALSE.
 #' @param edge_label_shadow_color Color for edge label shadow. Default "gray40".
@@ -262,7 +263,7 @@ splot <- function(
     edge_color = NULL,
     edge_width = NULL,
     esize = NULL,
-    edge_width_range = c(0.5, 4),
+    edge_width_range = c(0.1, 4),
     edge_scale_mode = "linear",
     cut = NULL,
     edge_alpha = 0.8,
@@ -271,6 +272,7 @@ splot <- function(
     edge_label_color = "gray30",
     edge_label_bg = "white",
     edge_label_position = 0.5,
+    edge_label_offset = 0,
     edge_label_fontface = 1,
     edge_label_shadow = FALSE,
     edge_label_shadow_color = "gray40",
@@ -462,6 +464,20 @@ splot <- function(
     n_edges <- nrow(edges)
   }
 
+  # ============================================
+  # QGRAPH-STYLE DOUBLE CURVED EDGES FOR UNDIRECTED NETWORKS
+  # ============================================
+  # For undirected networks with curves enabled, duplicate edges to create
+  # double curved visual representation (like qgraph)
+  if (n_edges > 0 && !directed && (identical(curves, TRUE) || identical(curves, "mutual"))) {
+    # Duplicate each edge with reversed direction
+    reverse_edges <- edges
+    reverse_edges$from <- edges$to
+    reverse_edges$to <- edges$from
+    edges <- rbind(edges, reverse_edges)
+    n_edges <- nrow(edges)
+  }
+
   if (n_edges > 0) {
     # Edge colors
     edge_colors <- resolve_edge_colors(edges, edge_color, positive_color, negative_color)
@@ -522,12 +538,46 @@ splot <- function(
       }
     }
 
+    # Default curvature - increased from 0.2 to 0.5 for better visibility (qgraph-style)
+    default_curve <- 0.5
+
+    # Calculate network center for curve direction
+    center_x <- mean(layout_mat[, 1])
+    center_y <- mean(layout_mat[, 2])
+
     if (identical(curves, TRUE) || identical(curves, "mutual")) {
-      # Only curve reciprocal edges
+      # Curve reciprocal edges with direction based on network center
       for (i in seq_len(n_edges)) {
         if (is_reciprocal[i] && curves_vec[i] == 0) {
-          # Opposite directions: lower index gets positive
-          curves_vec[i] <- if (edges$from[i] < edges$to[i]) 0.2 else -0.2
+          # Calculate edge midpoint
+          from_idx <- edges$from[i]
+          to_idx <- edges$to[i]
+          mid_x <- (layout_mat[from_idx, 1] + layout_mat[to_idx, 1]) / 2
+          mid_y <- (layout_mat[from_idx, 2] + layout_mat[to_idx, 2]) / 2
+
+          # Calculate perpendicular direction (for curve)
+          dx <- layout_mat[to_idx, 1] - layout_mat[from_idx, 1]
+          dy <- layout_mat[to_idx, 2] - layout_mat[from_idx, 2]
+
+          # Perpendicular vector (rotated 90 degrees)
+          perp_x <- -dy
+          perp_y <- dx
+
+          # Check if positive curve moves toward or away from center
+          test_x <- mid_x + perp_x * 0.1
+          test_y <- mid_y + perp_y * 0.1
+          dist_to_center_pos <- sqrt((test_x - center_x)^2 + (test_y - center_y)^2)
+          dist_to_center_orig <- sqrt((mid_x - center_x)^2 + (mid_y - center_y)^2)
+
+          # Lower index node gets the curve pointing AWAY from center (outer curve)
+          # Higher index node gets the curve pointing TOWARD center (inner curve)
+          if (edges$from[i] < edges$to[i]) {
+            # This edge should curve OUTWARD (away from center)
+            curves_vec[i] <- if (dist_to_center_pos > dist_to_center_orig) default_curve else -default_curve
+          } else {
+            # This edge should curve INWARD (toward center)
+            curves_vec[i] <- if (dist_to_center_pos < dist_to_center_orig) default_curve else -default_curve
+          }
         }
       }
     } else if (identical(curves, "force")) {
@@ -535,13 +585,7 @@ splot <- function(
       for (i in seq_len(n_edges)) {
         if (edges$from[i] == edges$to[i]) next  # Skip self-loops
         if (curves_vec[i] == 0) {
-          if (is_reciprocal[i]) {
-            # Reciprocal: opposite directions
-            curves_vec[i] <- if (edges$from[i] < edges$to[i]) 0.2 else -0.2
-          } else {
-            # Single edge: will be curved inward by render_edges_base
-            curves_vec[i] <- 0.2
-          }
+          curves_vec[i] <- default_curve
         }
       }
     }
@@ -700,6 +744,7 @@ splot <- function(
       edge_label_color = edge_label_color,
       edge_label_bg = edge_label_bg,
       edge_label_position = edge_label_position,
+      edge_label_offset = edge_label_offset,
       edge_label_fontface = edge_label_fontface,
       edge_label_shadow = edge_label_shadow,
       edge_label_shadow_color = edge_label_shadow_color,
@@ -875,7 +920,8 @@ render_edges_splot <- function(edges, layout, node_sizes, shapes,
                                curve_shape, curve_pivot, show_arrows, arrow_size,
                                bidirectional, loop_rotation, edge_labels,
                                edge_label_size, edge_label_color, edge_label_bg,
-                               edge_label_position, edge_label_fontface,
+                               edge_label_position, edge_label_offset = 0,
+                               edge_label_fontface,
                                edge_label_shadow = FALSE, edge_label_shadow_color = "gray40",
                                edge_label_shadow_offset = 0.5, edge_label_shadow_alpha = 0.5,
                                edge_ci = NULL, edge_ci_scale = 2.0,
@@ -1042,7 +1088,8 @@ render_edges_splot <- function(edges, layout, node_sizes, shapes,
       start$x, start$y, end$x, end$y,
       position = edge_label_position,
       curve = curve_i,
-      curvePivot = curve_pivot[i]
+      curvePivot = curve_pivot[i],
+      label_offset = edge_label_offset
     )
   }
 

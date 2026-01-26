@@ -4,6 +4,58 @@
 #' @keywords internal
 NULL
 
+#' qgraph Scaling Constants (Exact Values)
+#'
+#' Scaling constants that exactly replicate qgraph's visual formulas.
+#' Used by sonplot() for qgraph-compatible network visualization.
+#'
+#' @format A list with the following elements:
+#' \describe{
+#'   \item{vsize_base}{Base multiplier in vsize formula: 8}
+#'   \item{vsize_decay}{Decay constant in vsize formula: 80}
+#'   \item{vsize_min}{Minimum added to vsize: 1}
+#'   \item{vsize_factor}{Scale factor to convert vsize to user coordinates: 0.015}
+#'   \item{esize_base}{Base multiplier in esize formula: 15}
+#'   \item{esize_decay}{Decay constant in esize formula: 90}
+#'   \item{esize_min}{Minimum added to esize: 1}
+#'   \item{esize_unweighted}{Default edge width for unweighted networks: 2}
+#'   \item{cent2edge_divisor}{Divisor in cent2edge formula: 17.5}
+#'   \item{cent2edge_reference}{Reference value in cent2edge: 2.16}
+#'   \item{cent2edge_plot_ref}{Plot reference size: 7}
+#'   \item{curve_ref_diagonal}{Diagonal reference for curve normalization: sqrt(98)}
+#'   \item{arrow_factor}{Arrow size scale factor: 0.02}
+#' }
+#'
+#' @keywords internal
+QGRAPH_SCALE <- list(
+  # vsize formula: 8 * exp(-n/80) + 1
+  vsize_base = 8,
+  vsize_decay = 80,
+  vsize_min = 1,
+  vsize_factor = 0.012,  # Calibrated: converts vsize units to user coordinates
+
+  # esize formula: 15 * exp(-n/90) + 1
+  # Note: qgraph's esize ~15 visually corresponds to lwd ~4
+  # Use esize_scale to convert qgraph esize to lwd
+  esize_base = 15,
+  esize_decay = 90,
+  esize_min = 1,
+  esize_unweighted = 2,
+  esize_scale = 0.27,  # Calibrated: qgraph_esize * scale = lwd
+
+  # Cent2Edge constants (for exact qgraph boundary calculations)
+  cent2edge_divisor = 17.5,
+  cent2edge_reference = 2.16,
+  cent2edge_plot_ref = 7,
+
+  # Curve normalization: sqrt(pin[1]^2 + pin[2]^2) / sqrt(7^2 + 7^2)
+  curve_ref_diagonal = sqrt(7^2 + 7^2),
+
+  # Arrow sizing
+  # Reduced from 0.08 to 0.02 for consistency with splot/soplot
+  arrow_factor = 0.02
+)
+
 #' Sonnet Scaling Constants
 #'
 #' Central location for all scaling factors used in splot() and soplot().
@@ -54,7 +106,7 @@ SONNET_SCALE <- list(
 
   # Edge width scaling (qgraph-matched + extensions)
   # Output range [min_width, max_width] for scaled edges
-  edge_width_range = c(0.5, 4),
+  edge_width_range = c(0.1, 4),
   # Scaling mode: "linear", "log", "sqrt", "rank"
   edge_scale_mode = "linear",
   # Default cut = 75th percentile when NULL
@@ -69,7 +121,9 @@ SONNET_SCALE <- list(
 
   # soplot-specific: NPC coordinates
   # When converting node_size for soplot (NPC coords), use this factor
-  soplot_node_factor = 0.008
+  # Calibrated: splot uses ~2.6 user coord range, soplot uses 1.0 NPC
+  # To match: 0.015 / 2.6 ≈ 0.006
+  soplot_node_factor = 0.006
 )
 
 #' Legacy Scaling Constants (Pre-v2.0 Behavior)
@@ -105,8 +159,8 @@ SONNET_SCALE_LEGACY <- list(
   arrow_factor_soplot = 0.015,
   arrow_default = 1,
 
-  # soplot-specific (original behavior)
-  soplot_node_factor = 0.01
+  # soplot-specific (original behavior, adjusted for coordinate system)
+  soplot_node_factor = 0.004
 )
 
 #' Get Scaling Constants
