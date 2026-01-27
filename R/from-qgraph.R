@@ -62,13 +62,13 @@ from_qgraph <- function(qgraph_object, engine = c("splot", "soplot", "sonplot"),
 
   # --- Edge aesthetics from graphAttributes$Edges ---
   if (!is.null(ga_edges$color))              params$edge_color          <- ga_edges$color
-  if (!is.null(ga_edges$width))              params$edge_width          <- ga_edges$width
+  if (!is.null(ga_edges$width))              params$edge_width          <- ga_edges$width * 0.5
   if (!is.null(ga_edges$labels))             params$edge_labels         <- ga_edges$labels
-  if (!is.null(ga_edges$label.cex))          params$edge_label_size     <- ga_edges$label.cex
+  if (!is.null(ga_edges$label.cex))          params$edge_label_size     <- ga_edges$label.cex * 0.5
   if (!is.null(ga_edges$lty))                params$edge_style          <- ga_edges$lty
   if (!is.null(ga_edges$curve) && length(ga_edges$curve) == 1)
     params$curvature <- ga_edges$curve
-  if (!is.null(ga_edges$asize))              params$arrow_size          <- ga_edges$asize
+  if (!is.null(ga_edges$asize))              params$arrow_size          <- ga_edges$asize * 0.3
   if (!is.null(ga_edges$edge.label.position)) params$edge_label_position <- ga_edges$edge.label.position
 
   # --- Graph-level from graphAttributes$Graph ---
