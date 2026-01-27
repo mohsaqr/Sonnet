@@ -273,9 +273,12 @@ rescale_layout <- function(layout, mar = 0.1) {
   # Target range with margins
   target <- 1 - mar
 
-  # Rescale
-  layout[[1]] <- (x - x_range[1]) / diff(x_range) * 2 * target - target
-  layout[[2]] <- (y - y_range[1]) / diff(y_range) * 2 * target - target
+  # Rescale using uniform scaling to preserve aspect ratio
+  max_range <- max(diff(x_range), diff(y_range))
+  x_center <- mean(x_range)
+  y_center <- mean(y_range)
+  layout[[1]] <- (x - x_center) / max_range * 2 * target
+  layout[[2]] <- (y - y_center) / max_range * 2 * target
 
   layout
 }
