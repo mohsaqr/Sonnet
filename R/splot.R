@@ -574,9 +574,9 @@ splot <- function(
     center_y <- mean(layout_mat[, 2])
 
     if (identical(curves, TRUE) || identical(curves, "mutual")) {
-      # Curve reciprocal edges in opposite directions
+      # Curve reciprocal edges in opposite directions.
       # Use canonical ordering (lower node index first) so both edges in a pair
-      # compute the same perpendicular reference, then assign opposite signs
+      # compute the same perpendicular reference, then assign opposite signs.
       for (i in seq_len(n_edges)) {
         if (is_reciprocal[i]) {
           from_idx <- edges$from[i]
