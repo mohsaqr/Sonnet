@@ -37,6 +37,7 @@ from_qgraph <- function(qgraph_object, engine = c("splot", "soplot", "sonplot"),
   # Layout: use computed coordinates from qgraph_object$layout
   if (!is.null(qgraph_object$layout)) {
     params$layout <- qgraph_object$layout
+    params$rescale <- FALSE
   }
 
   # --- Map qgraph Arguments to Sonnet params ---
@@ -89,7 +90,6 @@ from_qgraph <- function(qgraph_object, engine = c("splot", "soplot", "sonplot"),
 
   # Plot settings
   if (!is.null(args$title))        params$title            <- args$title
-  if (!is.null(args$mar))          params$margins          <- args$mar
 
   # Apply overrides (user can override anything)
   for (nm in names(overrides)) {
