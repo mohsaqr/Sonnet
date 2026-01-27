@@ -250,25 +250,6 @@ soplot <- function(network, title = NULL, title_size = 14,
     }
   }
 
-  # ============================================
-  # QGRAPH-STYLE DOUBLE CURVED EDGES FOR UNDIRECTED NETWORKS
-  # ============================================
-  # For undirected networks with curves enabled, duplicate edges to create
-  # double curved visual representation (like qgraph)
-  effective_curves <- curves %||% TRUE
-  if (!network$network$is_directed && (identical(effective_curves, TRUE) || identical(effective_curves, "mutual"))) {
-    net <- network$network
-    edges_df <- net$get_edges()
-    if (!is.null(edges_df) && nrow(edges_df) > 0) {
-      # Duplicate each edge with reversed direction
-      reverse_edges <- edges_df
-      reverse_edges$from <- edges_df$to
-      reverse_edges$to <- edges_df$from
-      edges_df <- rbind(edges_df, reverse_edges)
-      net$set_edges(edges_df)
-    }
-  }
-
   # Apply layout if specified
  if (!is.null(layout)) {
     network <- sn_layout(network, layout)
@@ -468,17 +449,16 @@ soplot <- function(network, title = NULL, title_size = 14,
       x_range <- range(x, na.rm = TRUE)
       y_range <- range(y, na.rm = TRUE)
 
-      # Handle constant values
+      # Uniform scaling to preserve aspect ratio
       margin <- layout_margin
-      if (diff(x_range) > 1e-10) {
-        nodes$x <- margin + (1 - 2*margin) * (x - x_range[1]) / diff(x_range)
+      max_range <- max(diff(x_range), diff(y_range))
+      if (max_range > 1e-10) {
+        x_center <- mean(x_range)
+        y_center <- mean(y_range)
+        nodes$x <- 0.5 + (x - x_center) / max_range * (1 - 2 * margin)
+        nodes$y <- 0.5 + (y - y_center) / max_range * (1 - 2 * margin)
       } else {
         nodes$x <- rep(0.5, nrow(nodes))
-      }
-
-      if (diff(y_range) > 1e-10) {
-        nodes$y <- margin + (1 - 2*margin) * (y - y_range[1]) / diff(y_range)
-      } else {
         nodes$y <- rep(0.5, nrow(nodes))
       }
     }

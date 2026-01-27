@@ -597,15 +597,8 @@ splot <- function(
           dist_to_center_pos <- sqrt((test_x - center_x)^2 + (test_y - center_y)^2)
           dist_to_center_orig <- sqrt((mid_x - center_x)^2 + (mid_y - center_y)^2)
 
-          # Lower index node gets the curve pointing AWAY from center (outer curve)
-          # Higher index node gets the curve pointing TOWARD center (inner curve)
-          if (edges$from[i] < edges$to[i]) {
-            # This edge should curve OUTWARD (away from center)
-            curves_vec[i] <- if (dist_to_center_pos > dist_to_center_orig) curve_magnitude else -curve_magnitude
-          } else {
-            # This edge should curve INWARD (toward center)
-            curves_vec[i] <- if (dist_to_center_pos < dist_to_center_orig) curve_magnitude else -curve_magnitude
-          }
+          # Both edges curve OUTWARD (away from center), on opposite sides
+          curves_vec[i] <- if (dist_to_center_pos > dist_to_center_orig) curve_magnitude else -curve_magnitude
         }
       }
     } else if (identical(curves, "force")) {
