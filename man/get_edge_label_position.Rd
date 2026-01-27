@@ -12,7 +12,7 @@ get_edge_label_position(
   position = 0.5,
   curve = 0,
   curvePivot = 0.5,
-  label_offset = 0.03
+  label_offset = 0
 )
 }
 \arguments{

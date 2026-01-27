@@ -11,6 +11,10 @@ draw_node_label_base(
   cex = 1,
   col = "black",
   font = 1,
+  family = "sans",
+  hjust = 0.5,
+  vjust = 0.5,
+  srt = 0,
   pos = NULL,
   offset = 0.5
 )
@@ -25,6 +29,14 @@ draw_node_label_base(
 \item{col}{Text color.}
 
 \item{font}{Font face (1=plain, 2=bold, 3=italic, 4=bold italic).}
+
+\item{family}{Font family ("sans", "serif", "mono").}
+
+\item{hjust}{Horizontal justification (0=left, 0.5=center, 1=right).}
+
+\item{vjust}{Vertical justification (0=bottom, 0.5=center, 1=top).}
+
+\item{srt}{String rotation angle in degrees.}
 
 \item{pos}{Position relative to point (NULL=centered, 1=below, 2=left, 3=above, 4=right).}
 

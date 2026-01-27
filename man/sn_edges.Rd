@@ -7,6 +7,10 @@
 sn_edges(
   network,
   width = NULL,
+  esize = NULL,
+  edge_width_range = NULL,
+  edge_scale_mode = NULL,
+  cut = NULL,
   color = NULL,
   positive_color = NULL,
   negative_color = NULL,
@@ -28,6 +32,10 @@ sn_edges(
   label_border = NULL,
   label_border_color = NULL,
   label_underline = NULL,
+  label_shadow = NULL,
+  label_shadow_color = NULL,
+  label_shadow_offset = NULL,
+  label_shadow_alpha = NULL,
   bidirectional = NULL,
   loop_rotation = NULL,
   curve_shape = NULL,
@@ -56,6 +64,19 @@ sn_edges(
 Matrices and other inputs are auto-converted.}
 
 \item{width}{Edge width. Can be a single value, vector (per-edge), or "weight".}
+
+\item{esize}{Base edge size for weight scaling. NULL (default) uses adaptive sizing
+based on network size: \code{15 * exp(-n_nodes/90) + 1}. Larger values = thicker edges.}
+
+\item{edge_width_range}{Output width range as c(min, max) for weight-based scaling.
+Default c(0.5, 4). Edges are scaled to fit within this range.}
+
+\item{edge_scale_mode}{Scaling mode for edge weights: "linear" (default),
+"log" (for wide weight ranges), "sqrt" (moderate compression),
+or "rank" (equal visual spacing).}
+
+\item{cut}{Two-tier cutoff for edge width scaling. NULL (default) = auto 75th percentile.
+0 = disabled. Positive number = manual threshold.}
 
 \item{color}{Edge color. Can be a single color, vector, or "weight" for
 automatic coloring based on edge weights.}
@@ -101,6 +122,14 @@ values < 1 make them thinner. Applied after all other width calculations.}
 \item{label_border_color}{Border color for label border (default "gray50").}
 
 \item{label_underline}{Logical. Underline the label text? (default FALSE).}
+
+\item{label_shadow}{Logical. Enable drop shadow for labels? (default FALSE).}
+
+\item{label_shadow_color}{Color for label shadow (default "gray40").}
+
+\item{label_shadow_offset}{Offset distance for shadow in points (default 0.5).}
+
+\item{label_shadow_alpha}{Transparency for shadow (0-1, default 0.5).}
 
 \item{bidirectional}{Logical. Show arrows at both ends of edges?}
 

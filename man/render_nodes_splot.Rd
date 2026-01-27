@@ -17,12 +17,19 @@ render_nodes_splot(
   pie_border_width,
   donut_values,
   donut_colors,
+  donut_border_color,
   donut_border_width,
   donut_inner_ratio,
   donut_bg_color,
+  donut_shape,
   donut_show_value,
   donut_value_size,
   donut_value_color,
+  donut_value_fontface = "bold",
+  donut_value_fontfamily = "sans",
+  donut_value_digits = 2,
+  donut_value_prefix = "",
+  donut_value_suffix = "",
   donut2_values,
   donut2_colors,
   donut2_inner_ratio,
@@ -30,8 +37,17 @@ render_nodes_splot(
   label_size,
   label_color,
   label_position,
+  label_fontface = "plain",
+  label_fontfamily = "sans",
+  label_hjust = 0.5,
+  label_vjust = 0.5,
+  label_angle = 0,
   usePCH = FALSE
 )
+}
+\arguments{
+\item{donut_values}{List of values for donut chart. Each element is a single
+numeric (0-1) representing fill proportion for that node.}
 }
 \description{
 Render Nodes for splot

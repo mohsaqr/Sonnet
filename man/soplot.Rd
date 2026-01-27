@@ -10,6 +10,7 @@ soplot(
   title = NULL,
   title_size = 14,
   margins = c(0.05, 0.05, 0.1, 0.05),
+  layout_margin = 0.15,
   newpage = TRUE,
   layout = NULL,
   theme = NULL,
@@ -37,7 +38,23 @@ soplot(
   donut_show_value = NULL,
   donut_value_size = NULL,
   donut_value_color = NULL,
+  donut_fill = NULL,
+  donut_color = NULL,
+  donut_colors = NULL,
+  donut_shape = "circle",
+  donut_value_fontface = "bold",
+  donut_value_fontfamily = "sans",
+  donut_value_digits = 2,
+  donut_value_prefix = "",
+  donut_value_suffix = "",
+  donut2_values = NULL,
+  donut2_colors = NULL,
+  donut2_inner_ratio = 0.4,
   edge_width = NULL,
+  esize = NULL,
+  edge_width_range = NULL,
+  edge_scale_mode = "linear",
+  cut = NULL,
   edge_width_scale = NULL,
   edge_color = NULL,
   edge_alpha = NULL,
@@ -64,7 +81,8 @@ soplot(
   curves = NULL,
   node_names = NULL,
   legend = FALSE,
-  legend_position = "topright"
+  legend_position = "topright",
+  scaling = "default"
 )
 
 sn_render(
@@ -72,6 +90,7 @@ sn_render(
   title = NULL,
   title_size = 14,
   margins = c(0.05, 0.05, 0.1, 0.05),
+  layout_margin = 0.15,
   newpage = TRUE,
   layout = NULL,
   theme = NULL,
@@ -99,7 +118,23 @@ sn_render(
   donut_show_value = NULL,
   donut_value_size = NULL,
   donut_value_color = NULL,
+  donut_fill = NULL,
+  donut_color = NULL,
+  donut_colors = NULL,
+  donut_shape = "circle",
+  donut_value_fontface = "bold",
+  donut_value_fontfamily = "sans",
+  donut_value_digits = 2,
+  donut_value_prefix = "",
+  donut_value_suffix = "",
+  donut2_values = NULL,
+  donut2_colors = NULL,
+  donut2_inner_ratio = 0.4,
   edge_width = NULL,
+  esize = NULL,
+  edge_width_range = NULL,
+  edge_scale_mode = "linear",
+  cut = NULL,
   edge_width_scale = NULL,
   edge_color = NULL,
   edge_alpha = NULL,
@@ -126,7 +161,8 @@ sn_render(
   curves = NULL,
   node_names = NULL,
   legend = FALSE,
-  legend_position = "topright"
+  legend_position = "topright",
+  scaling = "default"
 )
 }
 \arguments{
@@ -194,13 +230,54 @@ For donut with single value (0-1), shows that proportion filled.}
 
 \item{donut_bg_color}{For donut nodes: background color for unfilled portion.}
 
-\item{donut_show_value}{For donut nodes: show value in center? Default TRUE.}
+\item{donut_show_value}{For donut nodes: show value in center? Default FALSE.}
 
 \item{donut_value_size}{For donut nodes: font size for center value.}
 
 \item{donut_value_color}{For donut nodes: color for center value text.}
 
-\item{edge_width}{Edge width.}
+\item{donut_fill}{Numeric value (0-1) for donut fill proportion. This is the
+simplified API for creating donut charts. Can be a single value or vector per node.}
+
+\item{donut_color}{Fill color(s) for the donut ring. Simplified API:
+single color for fill, or c(fill, background) for both.}
+
+\item{donut_colors}{Deprecated. Use donut_color instead.}
+
+\item{donut_shape}{Base shape for donut: "circle", "square", "hexagon", "triangle",
+"diamond", "pentagon". Default inherits from node_shape.}
+
+\item{donut_value_fontface}{Font face for donut center value: "plain", "bold",
+"italic", "bold.italic". Default "bold".}
+
+\item{donut_value_fontfamily}{Font family for donut center value. Default "sans".}
+
+\item{donut_value_digits}{Decimal places for donut center value. Default 2.}
+
+\item{donut_value_prefix}{Text before donut center value (e.g., "$"). Default "".}
+
+\item{donut_value_suffix}{Text after donut center value (e.g., "\%"). Default "".}
+
+\item{donut2_values}{List of values for inner donut ring (for double donut).}
+
+\item{donut2_colors}{List of color vectors for inner donut ring segments.}
+
+\item{donut2_inner_ratio}{Inner radius ratio for inner donut ring. Default 0.4.}
+
+\item{edge_width}{Edge width. If NULL, scales by weight using esize and edge_width_range.}
+
+\item{esize}{Base edge size for weight scaling. NULL (default) uses adaptive sizing
+based on network size: \code{15 * exp(-n_nodes/90) + 1}. Larger values = thicker edges.}
+
+\item{edge_width_range}{Output width range as c(min, max) for weight-based scaling.
+Default c(0.5, 4). Edges are scaled to fit within this range.}
+
+\item{edge_scale_mode}{Scaling mode for edge weights: "linear" (default),
+"log" (for wide weight ranges), "sqrt" (moderate compression),
+or "rank" (equal visual spacing).}
+
+\item{cut}{Two-tier cutoff for edge width scaling. NULL (default) = auto 75th percentile.
+0 = disabled. Positive number = manual threshold.}
 
 \item{edge_width_scale}{Scale factor for edge widths. Values > 1 make edges thicker.}
 
@@ -256,6 +333,9 @@ curve as ellipse (two opposing curves); FALSE = all straight; "force" = all curv
 \item{legend}{Logical. Show legend?}
 
 \item{legend_position}{Legend position: "topright", "topleft", "bottomright", "bottomleft".}
+
+\item{scaling}{Scaling mode: "default" for qgraph-matched scaling where node_size=6
+looks similar to qgraph vsize=6, or "legacy" to preserve pre-v2.0 behavior.}
 }
 \value{
 Invisible NULL. Called for side effect of drawing.

@@ -11,7 +11,11 @@ draw_edge_label_base(
   cex = 0.8,
   col = "gray30",
   bg = "white",
-  font = 1
+  font = 1,
+  shadow = FALSE,
+  shadow_color = "gray40",
+  shadow_offset = 0.5,
+  shadow_alpha = 0.5
 )
 }
 \arguments{
@@ -26,6 +30,14 @@ draw_edge_label_base(
 \item{bg}{Background color (or NA for none).}
 
 \item{font}{Font face.}
+
+\item{shadow}{Logical: enable drop shadow?}
+
+\item{shadow_color}{Shadow color.}
+
+\item{shadow_offset}{Shadow offset distance.}
+
+\item{shadow_alpha}{Shadow transparency.}
 }
 \description{
 Renders a label on an edge.

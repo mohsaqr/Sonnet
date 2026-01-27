@@ -7,10 +7,17 @@
 resolve_edge_widths(
   edges,
   edge.width = NULL,
+  esize = NULL,
+  n_nodes = NULL,
+  directed = FALSE,
   maximum = NULL,
   minimum = 0,
-  base_width = 1,
-  scale_factor = 3
+  cut = NULL,
+  edge_width_range = NULL,
+  edge_scale_mode = NULL,
+  scaling = "default",
+  base_width = NULL,
+  scale_factor = NULL
 )
 }
 \arguments{
@@ -18,18 +25,33 @@ resolve_edge_widths(
 
 \item{edge.width}{User-specified width(s) or NULL.}
 
+\item{esize}{Base edge size. NULL uses adaptive sizing based on n_nodes.}
+
+\item{n_nodes}{Number of nodes (for adaptive esize calculation).}
+
+\item{directed}{Whether network is directed.}
+
 \item{maximum}{Maximum weight for scaling (NULL for auto).}
 
 \item{minimum}{Minimum weight threshold.}
 
-\item{base_width}{Base width value.}
+\item{cut}{Two-tier cutoff. NULL = auto (75th pct), 0 = disabled.}
 
-\item{scale_factor}{Width scaling factor.}
+\item{edge_width_range}{Output width range c(min, max).}
+
+\item{edge_scale_mode}{Scaling mode: "linear", "log", "sqrt", "rank".}
+
+\item{scaling}{Scaling mode for constants: "default" or "legacy".}
+
+\item{base_width}{Legacy: Base width value.}
+
+\item{scale_factor}{Legacy: Width scaling factor.}
 }
 \value{
 Vector of widths for each edge.
 }
 \description{
 Determines edge widths based on weights or explicit values.
+Supports multiple scaling modes, two-tier cutoff, and output range specification.
 }
 \keyword{internal}

@@ -4,16 +4,24 @@
 \alias{resolve_node_sizes}
 \title{Resolve Node Sizes}
 \usage{
-resolve_node_sizes(vsize, n, default_size = 3, scale_factor = 0.03)
+resolve_node_sizes(
+  vsize,
+  n,
+  default_size = NULL,
+  scale_factor = NULL,
+  scaling = "default"
+)
 }
 \arguments{
 \item{vsize}{User-specified node size(s).}
 
 \item{n}{Number of nodes.}
 
-\item{default_size}{Default size if NULL.}
+\item{default_size}{Default size if NULL (uses scale constants if NULL).}
 
-\item{scale_factor}{Scale factor to apply.}
+\item{scale_factor}{Scale factor to apply (uses scale constants if NULL).}
+
+\item{scaling}{Scaling mode: "default" or "legacy".}
 }
 \value{
 Vector of node sizes.

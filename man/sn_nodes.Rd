@@ -8,6 +8,8 @@ sn_nodes(
   network,
   size = NULL,
   shape = NULL,
+  node_svg = NULL,
+  svg_preserve_aspect = NULL,
   fill = NULL,
   border_color = NULL,
   border_width = NULL,
@@ -19,17 +21,31 @@ sn_nodes(
   pie_values = NULL,
   pie_colors = NULL,
   pie_border_width = NULL,
+  donut_fill = NULL,
   donut_values = NULL,
+  donut_color = NULL,
   donut_colors = NULL,
   donut_border_width = NULL,
   donut_inner_ratio = NULL,
   donut_bg_color = NULL,
+  donut_shape = NULL,
   donut_show_value = NULL,
   donut_value_size = NULL,
   donut_value_color = NULL,
+  donut_value_fontface = NULL,
+  donut_value_fontfamily = NULL,
+  donut_value_digits = NULL,
+  donut_value_prefix = NULL,
+  donut_value_suffix = NULL,
+  donut_value_format = NULL,
   donut2_values = NULL,
   donut2_colors = NULL,
   donut2_inner_ratio = NULL,
+  label_fontface = NULL,
+  label_fontfamily = NULL,
+  label_hjust = NULL,
+  label_vjust = NULL,
+  label_angle = NULL,
   node_names = NULL
 )
 }
@@ -40,7 +56,13 @@ Matrices and other inputs are auto-converted.}
 \item{size}{Node size. Can be a single value, vector (per-node), or column name.}
 
 \item{shape}{Node shape. Options: "circle", "square", "triangle", "diamond",
-"pentagon", "hexagon", "ellipse", "heart", "star", "pie", "donut", "cross", "rectangle".}
+"pentagon", "hexagon", "ellipse", "heart", "star", "pie", "donut", "cross", "rectangle",
+or any custom SVG shape registered with register_svg_shape().}
+
+\item{node_svg}{Custom SVG for node shape: path to SVG file OR inline SVG string.
+Overrides shape parameter when provided.}
+
+\item{svg_preserve_aspect}{Logical: maintain SVG aspect ratio? Default TRUE.}
 
 \item{fill}{Node fill color. Can be a single color, vector, or column name.}
 
@@ -58,16 +80,28 @@ Matrices and other inputs are auto-converted.}
 
 \item{show_labels}{Logical. Show node labels? Default TRUE.}
 
-\item{pie_values}{For pie/donut/donut_pie shape: list or matrix of values for segments.
-For donut with single value (0-1), shows that proportion filled.}
+\item{pie_values}{For pie shape: list or matrix of values for pie segments.
+Each element corresponds to a node and contains values for its segments.}
 
-\item{pie_colors}{For pie/donut/donut_pie shape: colors for pie segments.}
+\item{pie_colors}{For pie shape: colors for pie segments.}
 
 \item{pie_border_width}{Border width for pie chart nodes.}
 
-\item{donut_values}{For donut_pie shape: vector of values (0-1) for the outer ring proportion.}
+\item{donut_fill}{For donut shape: numeric value (0-1) specifying fill proportion.
+0.1 = 10\% filled, 0.5 = 50\% filled, 1.0 = fully filled ring.
+Can be a single value (all nodes) or vector (per-node values).}
 
-\item{donut_colors}{For donut shape: colors for donut segments.}
+\item{donut_values}{Deprecated. Use donut_fill for simple fill proportion.
+Still works for backwards compatibility.}
+
+\item{donut_color}{For donut shape: fill color(s) for the donut ring. Simplified API:
+\itemize{
+\item Single color: fill color for ALL nodes (e.g., "steelblue")
+\item Two colors: fill + background for ALL nodes (e.g., c("steelblue", "lightyellow"))
+\item 2 colors: per-node fill colors (recycled to n_nodes)Default: "lightgray" fill, "gray90" background when shape="donut".
+}}
+
+\item{donut_colors}{Deprecated. Use donut_color instead.}
 
 \item{donut_border_width}{Border width for donut chart nodes.}
 
@@ -75,17 +109,41 @@ For donut with single value (0-1), shows that proportion filled.}
 
 \item{donut_bg_color}{For donut shape: background color for unfilled portion.}
 
-\item{donut_show_value}{For donut shape: show value in center? Default TRUE.}
+\item{donut_shape}{For donut: base shape for ring ("circle", "square", "hexagon", "triangle", "diamond", "pentagon"). Default "circle".}
+
+\item{donut_show_value}{For donut shape: show value in center? Default FALSE.}
 
 \item{donut_value_size}{For donut shape: font size for center value.}
 
 \item{donut_value_color}{For donut shape: color for center value text.}
+
+\item{donut_value_fontface}{For donut shape: font face for center value ("plain", "bold", "italic", "bold.italic"). Default "bold".}
+
+\item{donut_value_fontfamily}{For donut shape: font family for center value ("sans", "serif", "mono"). Default "sans".}
+
+\item{donut_value_digits}{For donut shape: decimal places for value display. Default 2.}
+
+\item{donut_value_prefix}{For donut shape: text before value (e.g., "$"). Default "".}
+
+\item{donut_value_suffix}{For donut shape: text after value (e.g., "\%"). Default "".}
+
+\item{donut_value_format}{For donut shape: custom format function (overrides digits).}
 
 \item{donut2_values}{For double donut: list of values for inner donut ring.}
 
 \item{donut2_colors}{For double donut: colors for inner donut ring segments.}
 
 \item{donut2_inner_ratio}{For double donut: inner radius ratio for inner donut ring. Default 0.4.}
+
+\item{label_fontface}{Font face for node labels: "plain", "bold", "italic", "bold.italic". Default "plain".}
+
+\item{label_fontfamily}{Font family for node labels: "sans", "serif", "mono", or system font. Default "sans".}
+
+\item{label_hjust}{Horizontal justification for node labels (0=left, 0.5=center, 1=right). Default 0.5.}
+
+\item{label_vjust}{Vertical justification for node labels (0=bottom, 0.5=center, 1=top). Default 0.5.}
+
+\item{label_angle}{Text rotation angle in degrees for node labels. Default 0.}
 
 \item{node_names}{Alternative names for legend (separate from display labels).}
 }
