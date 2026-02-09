@@ -251,7 +251,7 @@ Special handling for TNA objects:
 
 cograph provides bidirectional conversion between network formats. These functions accept any supported input type and convert to the target format.
 
-#### as_cograph() - Universal Import
+#### as_cograph() / to_cograph() - Universal Import
 
 Location: `R/class-network.R`
 
