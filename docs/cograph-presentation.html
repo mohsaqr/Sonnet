@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cograph - Modern Network Visualization for R</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a2e;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .slide {
+            width: 100%;
+            min-height: 100vh;
+            padding: 50px 70px;
+            display: flex;
+            flex-direction: column;
+            page-break-after: always;
+            position: relative;
+            background: white;
+        }
+
+        /* Title Slide */
+        .slide-title {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 50%, #7c3aed 100%);
+            color: white;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .slide-title h1 {
+            font-size: 6rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            letter-spacing: -3px;
+        }
+        .slide-title .tagline {
+            font-size: 2.2rem;
+            opacity: 0.95;
+            margin-bottom: 30px;
+            font-weight: 300;
+        }
+        .slide-title .version {
+            background: rgba(255,255,255,0.2);
+            padding: 12px 40px;
+            border-radius: 30px;
+            font-size: 1.3rem;
+            margin-top: 20px;
+        }
+        .slide-title .author {
+            margin-top: 60px;
+            font-size: 1.4rem;
+            opacity: 0.9;
+        }
+
+        /* Content Slides */
+        .slide h2 {
+            font-size: 2.2rem;
+            color: #1e3a5f;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 4px solid #2563eb;
+        }
+        .slide h3 {
+            font-size: 1.35rem;
+            color: #334155;
+            margin: 20px 0 12px;
+            font-weight: 600;
+        }
+        .slide h4 {
+            font-size: 1.15rem;
+            color: #2563eb;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        .slide p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #475569;
+        }
+
+        /* Code Blocks */
+        pre {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 20px 25px;
+            border-radius: 10px;
+            font-family: 'SF Mono', Consolas, monospace;
+            font-size: 1rem;
+            line-height: 1.55;
+            overflow-x: auto;
+            margin: 12px 0;
+        }
+        code {
+            font-family: 'SF Mono', Consolas, monospace;
+            background: #e2e8f0;
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-size: 0.95em;
+            color: #1e3a5f;
+        }
+        pre code { background: none; padding: 0; color: inherit; }
+        .comment { color: #64748b; }
+        .string { color: #86efac; }
+        .keyword { color: #c084fc; }
+        .function { color: #67e8f9; }
+        .number { color: #fde68a; }
+        .param { color: #fca5a5; }
+
+        /* Grid Layouts */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+        .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 15px; }
+        .grid-2-1 { display: grid; grid-template-columns: 2fr 1fr; gap: 25px; }
+        .grid-1-2 { display: grid; grid-template-columns: 1fr 2fr; gap: 25px; }
+
+        /* Cards */
+        .card {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #e2e8f0;
+        }
+        .card-accent {
+            background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%);
+            border: 2px solid #2563eb;
+        }
+        .card-dark {
+            background: #1e293b;
+            color: #e2e8f0;
+            border: none;
+        }
+        .card-dark h4 { color: #67e8f9; }
+        .card-dark p { color: #cbd5e1; }
+        .card ul { padding-left: 20px; margin-top: 8px; }
+        .card li { margin-bottom: 6px; color: #475569; font-size: 1rem; }
+        .card-dark li { color: #cbd5e1; }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+            margin: 10px 0;
+        }
+        th, td {
+            padding: 10px 14px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        th {
+            background: #1e3a5f;
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        tr:nth-child(even) { background: #f8fafc; }
+        td:first-child { font-weight: 500; color: #1e3a5f; }
+        .table-compact th, .table-compact td { padding: 8px 12px; font-size: 0.9rem; }
+
+        /* Code in tables */
+        td code { font-size: 0.85rem; }
+
+        /* Comparison styles */
+        .old { color: #dc2626; text-decoration: line-through; opacity: 0.7; }
+        .new { color: #059669; font-weight: 600; }
+
+        /* Lists */
+        .bullet-list { font-size: 1.15rem; line-height: 1.8; }
+        .bullet-list li { margin-bottom: 10px; color: #334155; }
+        .bullet-list strong { color: #1e3a5f; }
+        .bullet-compact { font-size: 1rem; line-height: 1.6; }
+        .bullet-compact li { margin-bottom: 6px; }
+
+        /* Highlight boxes */
+        .highlight {
+            background: #fef3c7;
+            border-left: 5px solid #f59e0b;
+            padding: 15px 20px;
+            border-radius: 0 10px 10px 0;
+            margin: 15px 0;
+        }
+        .highlight strong { color: #92400e; }
+        .tip {
+            background: #dcfce7;
+            border-left: 5px solid #22c55e;
+            padding: 15px 20px;
+            border-radius: 0 10px 10px 0;
+            margin: 15px 0;
+        }
+        .tip strong { color: #166534; }
+
+        /* Color swatches */
+        .swatch {
+            display: inline-block;
+            width: 22px;
+            height: 22px;
+            border-radius: 4px;
+            vertical-align: middle;
+            margin-right: 8px;
+            border: 2px solid rgba(0,0,0,0.1);
+        }
+
+        /* Section Slide */
+        .slide-section {
+            background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
+            color: white;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .slide-section h2 {
+            font-size: 3.5rem;
+            color: white;
+            border: none;
+            margin: 0;
+            font-weight: 700;
+        }
+        .slide-section p {
+            font-size: 1.6rem;
+            color: #94a3b8;
+            margin-top: 20px;
+        }
+        .slide-section .icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        /* Footer */
+        .slide-footer {
+            position: absolute;
+            bottom: 25px;
+            left: 70px;
+            right: 70px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #94a3b8;
+            font-size: 0.85rem;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 15px;
+        }
+        .slide-section .slide-footer { border-top-color: #334155; }
+
+        /* Feature boxes */
+        .feature-box {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 15px 0;
+        }
+        .feature-box h3 { color: white; margin-top: 0; font-size: 1.4rem; }
+        .feature-box p { color: #e2e8f0; font-size: 1.15rem; }
+        .feature-box code { background: rgba(255,255,255,0.2); color: white; }
+
+        /* Flex utilities */
+        .flex-grow { flex-grow: 1; }
+        .mt-auto { margin-top: auto; }
+        .mb-0 { margin-bottom: 0; }
+        .mt-20 { margin-top: 20px; }
+
+        /* Print */
+        @media print {
+            .slide { page-break-after: always; }
+            body { background: white; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Slide 1: Title -->
+    <div class="slide slide-title">
+        <h1>cograph</h1>
+        <div class="tagline">Modern Network Visualization for R</div>
+        <div class="version">Version 1.5.2</div>
+        <div class="author">Mohammed Saqr<br><span style="font-size: 1rem; opacity: 0.7;">University of Eastern Finland</span></div>
+        <div class="slide-footer" style="border-top-color: rgba(255,255,255,0.2);">
+            <span></span>
+            <span style="color: rgba(255,255,255,0.7);">github.com/mohsaqr/cograph</span>
+        </div>
+    </div>
+
+    <!-- Slide 2: What is cograph -->
+    <div class="slide">
+        <h2>What is cograph?</h2>
+
+        <div class="grid-2">
+            <div>
+                <p style="font-size: 1.25rem; margin-bottom: 20px;">A modern R package for creating <strong>publication-ready network visualizations</strong> with minimal code.</p>
+
+                <h3>Key Features</h3>
+                <ul class="bullet-list">
+                    <li><strong>Universal input:</strong> matrices, igraph, tna, edge lists, statnet</li>
+                    <li><strong>One function:</strong> <code>splot(data)</code> is all you need</li>
+                    <li><strong>Smart defaults:</strong> auto-detect directed, scale by weight</li>
+                    <li><strong>TNA-first:</strong> built for Transition Network Analysis</li>
+                    <li><strong>Statistical:</strong> bootstrap, permutation, stability plots</li>
+                    <li><strong>Extensible:</strong> custom layouts, shapes, themes</li>
+                </ul>
+            </div>
+            <div>
+                <div class="card card-dark">
+                    <h4>Simplest Usage</h4>
+<pre style="margin: 0;"><code><span class="comment"># Just one line!</span>
+<span class="function">splot</span>(my_matrix)
+
+<span class="comment"># Works with any format</span>
+<span class="function">splot</span>(igraph_object)
+<span class="function">splot</span>(tna_model)
+<span class="function">splot</span>(edge_list_df)</code></pre>
+                </div>
+
+                <div class="card mt-20">
+                    <h4>Dependencies</h4>
+                    <p><strong>Required:</strong> R6, grid, grDevices, ggplot2</p>
+                    <p><strong>Suggests:</strong> igraph, tna, network, qgraph</p>
+                </div>
+
+                <div class="tip">
+                    <strong>Install:</strong> <code>install.packages("cograph")</code>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide-footer">
+            <span>cograph - Modern Network Visualization</span>
+            <span>2</span>
+        </div>
+    </div>
+
+    <!-- Slide 3: Design Philosophy -->
+    <div class="slide">
+        <h2>Design Philosophy</h2>
+
+        <div class="feature-box">
+            <h3>Core Principle: Simplicity First</h3>
+            <p>Network visualization should be as simple as <code>splot(matrix)</code> while offering deep customization when needed. Every parameter has a sensible default.</p>
+        </div>
+
+        <div class="grid-3 mt-20">
+            <div class="card">
+                <h4>1. Progressive Complexity</h4>
+                <ul class="bullet-compact">
+                    <li>Start with <code>splot(data)</code></li>
+                    <li>Add parameters as needed</li>
+                    <li>Full control available</li>
+                    <li>No mandatory configuration</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h4>2. Consistent API</h4>
+                <ul class="bullet-compact">
+                    <li>All snake_case naming</li>
+                    <li>Predictable patterns</li>
+                    <li><code>sn_*()</code> for transforms</li>
+                    <li><code>plot_*()</code> for plots</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h4>3. Pipe-Friendly</h4>
+                <ul class="bullet-compact">
+                    <li>Works with <code>|></code></li>
+                    <li>Immutable transforms</li>
+                    <li>Chain operations</li>
+                    <li>Fluent interface</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="grid-2 mt-20">
+            <div class="card">
+                <h4>4. TNA-First Design</h4>
+                <p>Built with Transition Network Analysis as primary use case. Preserves all TNA metadata: weights, initial probabilities, labels, colors, raw data.</p>
+            </div>
+            <div class="card">
+                <h4>5. Statistical Plotting</h4>
+                <p>Validation results (bootstrap, permutation) are directly plottable. Run <code>bootstrap()</code>, then <code>splot()</code> the result. Automatic styling for significant vs. non-significant edges.</p>
+            </div>
+        </div>
+
+        <div class="slide-footer">
+            <span>cograph - Modern Network Visualization</span>
+            <span>3</span>
+        </div>
+    </div>
+
+    <!-- Slide 4: Naming Section -->
+    <div class="slide slide-section">
+        <div class="icon">📐</div>
+        <h2>Naming Convention</h2>
+        <p>Consistent, discoverable, memorable function and parameter names</p>
+        <div class="slide-footer">
+            <span></span>
+            <span style="color: rgba(255,255,255,0.5);">4</span>
+        </div>
+    </div>
+
+    <!-- Slide 5: Function Naming -->
+    <div class="slide">
+        <h2>Function Naming Patterns</h2>
+
+        <table>
+            <tr>
+                <th style="width: 20%;">Pattern</th>
+                <th style="width: 25%;">Purpose</th>
+                <th style="width: 30%;">Examples</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td><code>splot*()</code></td>
+                <td>Primary plotting</td>
+                <td><code>splot()</code>, <code>soplot()</code></td>
+                <td>Main visualization functions (base R, grid)</td>
+            </tr>
+            <tr>
+                <td><code>sn_*()</code></td>
+                <td>Pipe transforms</td>
+                <td><code>sn_layout()</code>, <code>sn_nodes()</code>, <code>sn_edges()</code></td>
+                <td>Modify network object, return modified copy</td>
+            </tr>
+            <tr>
+                <td><code>plot_*()</code></td>
+                <td>Specialized plots</td>
+                <td><code>plot_compare()</code>, <code>plot_heatmap()</code>, <code>plot_mlna()</code></td>
+                <td>Specific visualization types</td>
+            </tr>
+            <tr>
+                <td><code>to_*()</code></td>
+                <td>Export conversion</td>
+                <td><code>to_igraph()</code>, <code>to_matrix()</code>, <code>to_df()</code></td>
+                <td>Convert cograph to other formats</td>
+            </tr>
+            <tr>
+                <td><code>as_*()</code></td>
+                <td>Import conversion</td>
+                <td><code>as_cograph()</code></td>
+                <td>Convert other formats to cograph</td>
+            </tr>
+            <tr>
+                <td><code>get_*()</code></td>
+                <td>Accessors</td>
+                <td><code>get_nodes()</code>, <code>get_edges()</code>, <code>get_tna_model()</code></td>
+                <td>Extract data from network object</td>
+            </tr>
+            <tr>
+                <td><code>n_*()</code></td>
+                <td>Counts</td>
+                <td><code>n_nodes()</code>, <code>n_edges()</code></td>
+                <td>Return counts as integers</td>
+            </tr>
+        </table>
+
+        <div class="grid-2 mt-20">
+            <div class="tip">
+                <strong>Discoverability:</strong> Type <code>sn_</code> + Tab in RStudio to see all transformation functions. Type <code>plot_</code> + Tab for all specialized plots.
+            </div>
+            <div class="highlight">
+                <strong>The "sn" prefix</strong> stands for "simple network" or "splot network" - indicating these are pipe-friendly network transformations.
+            </div>
+        </div>
+
+        <div class="slide-footer">
+            <span>cograph - Modern Network Visualization</span>
+            <span>5</span>
+        </div>
+    </div>
+
+    <!-- Slide 6: Parameter Naming -->
+    <div class="slide">
+        <h2>Parameter Naming: snake_case Throughout</h2>
+
+        <div class="grid-2">
+            <div>
+                <h3>Node Parameters</h3>
+                <table class="table-compact">
+                    <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+                    <tr><td><code>node_size</code></td><td>numeric</td><td>Node size (scalar or vector)</td></tr>
+                    <tr><td><code>node_fill</code></td><td>color</td><td>Fill color(s)</td></tr>
+                    <tr><td><code>node_shape</code></td><td>string</td><td>Shape name or vector</td></tr>
+                    <tr><td><code>node_border_color</code></td><td>color</td><td>Border color(s)</td></tr>
+                    <tr><td><code>node_border_width</code></td><td>numeric</td><td>Border thickness</td></tr>
+                    <tr><td><code>node_alpha</code></td><td>0-1</td><td>Transparency</td></tr>
+                    <tr><td><code>label_size</code></td><td>numeric</td><td>Label font size</td></tr>
+                    <tr><td><code>label_color</code></td><td>color</td><td>Label text color</td></tr>
+                </table>
+            </div>
+            <div>
+                <h3>Edge Parameters</h3>
+                <table class="table-compact">
+                    <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+                    <tr><td><code>edge_color</code></td><td>color</td><td>Edge color(s)</td></tr>
+                    <tr><td><code>edge_width</code></td><td>numeric</td><td>Edge thickness</td></tr>
+                    <tr><td><code>edge_style</code></td><td>1-6</td><td>Line type (solid, dashed...)</td></tr>
+                    <tr><td><code>edge_alpha</code></td><td>0-1</td><td>Transparency</td></tr>
+                    <tr><td><code>edge_labels</code></td><td>logical</td><td>Show weight labels</td></tr>
+                    <tr><td><code>edge_label_size</code></td><td>numeric</td><td>Label font size</td></tr>
+                    <tr><td><code>arrow_size</code></td><td>numeric</td><td>Arrow head size</td></tr>
+                    <tr><td><code>curvature</code></td><td>numeric</td><td>Edge bend amount</td></tr>
+                </table>
+            </div>
+        </div>
+
+        <h3>Comparison with Other Packages</h3>
+        <table>
+            <tr><th>Concept</th><th>qgraph</th><th>igraph</th><th>cograph</th><th>Benefit</th></tr>
+            <tr>
+                <td>Node size</td>
+                <td class="old">vsize</td>
+                <td class="old">vertex.size</td>
+                <td class="new">node_size</td>
+                <td>Clear, readable</td>
+            </tr>
+            <tr>
+                <td>Node color</td>
+                <td class="old">color</td>
+                <td class="old">vertex.color</td>
+                <td class="new">node_fill</td>
+                <td>Distinguishes fill vs border</td>
+            </tr>
+            <tr>
+                <td>Edge width</td>
+                <td class="old">esize</td>
+                <td class="old">edge.width</td>
+                <td class="new">edge_width</td>
+                <td>Consistent naming</td>
+            </tr>
+            <tr>
+                <td>Donut chart</td>
+                <td class="old">pie (list)</td>
+                <td>N/A</td>
+                <td class="new">donut_fill (0-1)</td>
+                <td>Simple numeric input</td>
+            </tr>
+        </table>
+
+        <div class="slide-footer">
+            <span>cograph - Modern Network Visualization</span>
+            <span>6</span>
+        </div>
+    </div>
+
+    <!-- Slide 7: splot Section -->
+    <div class="slide slide-section">
+        <div class="icon">📊</div>
+        <h2>splot()</h2>
+        <p>The main plotting function - comprehensive parameter reference</p>
+        <div class="slide-footer">
+            <span></span>
+            <span style="color: rgba(255,255,255,0.5);">7</span>
+        </div>
+    </div>
+
+    <!-- Slide 8: splot Overview -->
+    <div class="slide">
+        <h2>splot() - Function Overview</h2>
+
+        <div class="grid-2">
+            <div>
+                <h3>What splot() Does</h3>
+                <ul class="bullet-list">
+                    <li><strong>Accepts any input:</strong> matrix, igraph, tna, data.frame, network, qgraph, cograph_network</li>
+                    <li><strong>Auto-detects:</strong> directedness from matrix symmetry</li>
+                    <li><strong>Auto-scales:</strong> edge widths by weight magnitude</li>
+                    <li><strong>Auto-colors:</strong> positive (green) vs negative (red) edges</li>
+                    <li><strong>Computes layout:</strong> spring, circle, or custom</li>
+                    <li><strong>Renders:</strong> using fast base R graphics</li>
+                </ul>
+
+                <h3>Three Rendering Backends</h3>
+                <table class="table-compact">
+                    <tr><th>Function</th><th>Backend</th><th>Returns</th></tr>
+                    <tr><td><code>splot()</code></td><td>Base R</td><td>NULL (plots to device)</td></tr>
+                    <tr><td><code>soplot()</code></td><td>Grid</td><td>grob object</td></tr>
+                    <tr><td><code>sn_ggplot()</code></td><td>ggplot2</td><td>ggplot object</td></tr>
+                </table>
+            </div>
+            <div>
+                <div class="card card-dark">
+                    <h4>Basic Signature</h4>
+<pre style="margin: 0; font-size: 0.9rem;"><code><span class="function">splot</span>(
+  x,                    <span class="comment"># Network input</span>
+  layout = <span class="string">"spring"</span>,    <span class="comment"># Layout algorithm</span>
+  directed = <span class="keyword">NULL</span>,      <span class="comment"># Auto-detect</span>
+  seed = <span class="number">42</span>,            <span class="comment"># For reproducibility</span>
+  theme = <span class="string">"classic"</span>,    <span class="comment"># Visual theme</span>
+
+  <span class="comment"># Node parameters</span>
+  node_size, node_fill, node_shape,
+  labels, label_size, label_color,
+  donut_fill, pie_values,
+
+  <span class="comment"># Edge parameters</span>
+  edge_color, edge_width, edge_style,
+  edge_labels, curvature, arrow_size,
+
+  <span class="comment"># CI visualization</span>
+  edge_ci, edge_ci_scale, edge_ci_alpha,
+
+  <span class="comment"># Plot options</span>
+  title, mar, ...
+)</code></pre>
+                </div>
+
+                <div class="highlight mt-20">
+                    <strong>Key insight:</strong> All parameters have defaults. The only required argument is the network data itself.
+                </div>
+            </div>
+        </div>
+
+        <div class="slide-footer">
+            <span>cograph - Modern Network Visualization</span>
+            <span>8</span>
+        </div>
+    </div>
+
+    <!-- Slide 9: splot Node Parameters -->
+    <div class="slide">
+        <h2>splot() - Node Parameters (Complete Reference)</h2>
+
+        <div class="grid-2">
+            <div>
+                <h3>Basic Node Styling</h3>
+                <table class="table-compact">
+                    <tr><th>Parameter</th><th>Default</th><th>Description</th></tr>
+                    <tr><td><code>node_size</code></td><td>3</td><td>Size (scalar or per-node vector)</td></tr>
+                    <tr><td><code>node_size2</code></td><td>NULL</td><td>Secondary size for ellipse height</td></tr>
+                    <tr><td><code>node_shape</code></td><td>"circle"</td><td>Shape name or vector</td></tr>
+                    <tr><td><code>node_fill</code></td><td>"#4A90D9"</td><td>Fill color(s)</td></tr>
+                    <tr><td><code>node_border_color</code></td><td>"#2C5AA0"</td><td>Border color(s)</td></tr>
+                    <tr><td><code>node_border_width</code></td><td>1</td><td>Border thickness</td></tr>
+                    <tr><td><code>node_alpha</code></td><td>1</td><td>Transparency (0-1)</td></tr>
+                </table>
+
+                <h3>Available Shapes</h3>
+                <p style="font-size: 1rem; line-height: 1.8;">
+                    <code>circle</code> • <code>square</code> • <code>triangle</code> • <code>diamond</code> •
+                    <code>pentagon</code> • <code>hexagon</code> • <code>star</code> • <code>heart</code> •
+                    <code>ellipse</code> • <code>cross</code> • custom SVG
+                </p>
+            </div>
+            <div>
+                <h3>Label Parameters</h3>
+                <table class="table-compact">
+                    <tr><th>Parameter</th><th>Default</th><th>Description</th></tr>
+                    <tr><td><code>labels</code></td><td>TRUE</td><td>TRUE, FALSE, or character vector</td></tr>
+                    <tr><td><code>label_size</code></td><td>10</td><td>Font size (cex)</td></tr>
+                    <tr><td><code>label_color</code></td><td>"black"</td><td>Text color</td></tr>
+                    <tr><td><code>label_position</code></td><td>"center"</td><td>center, above, below, left, right</td></tr>
+                    <tr><td><code>label_fontface</code></td><td>"plain"</td><td>plain, bold, italic, bold.italic</td></tr>
+                    <tr><td><code>label_fontfamily</code></td><td>"sans"</td><td>sans, serif, mono</td></tr>
+                    <tr><td><code>label_angle</code></td><td>0</td><td>Rotation in degrees</td></tr>
+                </table>
+
+                <div class="card card-dark mt-20">
+                    <h4>Example</h4>
+<pre style="margin: 0; font-size: 0.9rem;"><code><span class="function">splot</span>(net,
+      node_shape = <span class="string">"hexagon"</span>,
+      node_fill = <span class="function">c</span>(<span class="string">"coral"</span>, <span class="string">"steelblue"</span>, <span class="string">"gold"</span>),
+      node_size = <span class="number">8</span>,
+      node_border_width = <span class="number">2</span>,
+      labels = <span class="keyword">TRUE</span>,
+      label_color = <span class="string">"white"</span>,
+      label_fontface = <span class="string">"bold"</span>)</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide-footer">
+            <span>cograph - Modern Network Visualization</span>
+            <span>9</span>
+        </div>
+    </div>
+
+    <!-- Slide 10: Donut and Pie -->
+    <div class="slide">
+        <h2>splot() - Donut & Pie Chart Nodes</h2>
+
+        <div class="grid-2">
+            <div>
+                <h3>Donut Charts (qgraph-style)</h3>
+                <p>Simple proportional fill using a single value (0-1) per node.</p>
+
+                <table class="table-compact">
+                    <tr><th>Parameter</th><th>Default</th><th>Description</th></tr>
+                    <tr><td><code>donut_fill</code></td><td>NULL</td><td>Fill proportion 0-1 per node</td></tr>
+                    <tr><td><code>donut_color</code></td><td>"maroon"</td><td>Fill color(s)</td></tr>
+                    <tr><td><code>donut_bg_color</code></td><td>"gray90"</td><td>Unfilled portion color</td></tr>
+                    <tr><td><code>donut_inner_ratio</code></td><td>0.5</td><td>Inner radius (0-1)</td></tr>
+                    <tr><td><code>donut_shape</code></td><td>inherit</td><td>Base shape for donut</td></tr>
+                    <tr><td><code>donut_border_color</code></td><td>inherit</td><td>Border color</td></tr>
+                    <tr><td><code>donut_show_value</code></td><td>FALSE</td><td>Show value in center</td></tr>
+                </table>
+
+                <div class="card card-dark mt-20">
+<pre style="margin: 0; font-size: 0.9rem;"><code><span class="comment"># TNA initial probabilities as donuts</span>
+<span class="function">splot</span>(tna_model,
+      donut_fill = tna_model$inits,
+      donut_color = <span class="string">"steelblue"</span>,
+      donut_inner_ratio = <span class="number">0.6</span>)</code></pre>
+                </div>
+            </div>
+            <div>
+                <h3>Pie Chart Nodes</h3>
+                <p>Multiple segments per node using a list of vectors.</p>
+
+                <table class="table-compact">
+                    <tr><th>Parameter</th><th>Description</th></tr>
+                    <tr><td><code>pie_values</code></td><td>List of numeric vectors (one per node)</td></tr>
+                    <tr><td><code>pie_colors</code></td><td>List of color vectors for segments</td></tr>
+                    <tr><td><code>pie_border_width</code></td><td>Border between slices</td></tr>
+                </table>
+
+                <div class="card card-dark mt-20">
+<pre style="margin: 0; font-size: 0.9rem;"><code><span class="comment"># Different segments for each node</span>
+<span class="function">splot</span>(net,
+      pie_values = <span class="function">list</span>(
+        <span class="function">c</span>(<span class="number">0.4</span>, <span class="number">0.6</span>),           <span class="comment"># Node 1: 2 segments</span>
+        <span class="function">c</span>(<span class="number">0.3</span>, <span class="number">0.3</span>, <span class="number">0.4</span>),      <span class="comment"># Node 2: 3 segments</span>
+        <span class="function">c</span>(<span class="number">0.5</span>, <span class="number">0.5</span>)            <span class="comment"># Node 3: 2 segments</span>
+      ),
+      pie_colors = <span class="function">list</span>(
+        <span class="function">c</span>(<span class="string">"red"</span>, <span class="string">"blue"</span>),
+        <span class="function">c</span>(<span class="string">"red"</span>, <span class="string">"green"</span>, <span class="string">"blue"</span>),
+        <span class="function">c</span>(<span class="string">"orange"</span>, <span class="string">"purple"</span>)
+      ))</code></pre>
+                </div>
+
+                <div class="tip mt-20">
+                    <strong>Tip:</strong> If you pass a simple numeric vector (like centrality scores) to <code>pie_values</code>, it's automatically converted to <code>donut_fill</code> for convenience.
+                </div>
+            </div>
+        </div>
+
+        <div class="slide-footer">
+            <span>cograph - Modern Network Visualization</span>
+            <span>10</span>
+        </div>
+    </div>
+
+    <!-- Slide 11: Edge Parameters -->
+    <div class="slide">
+        <h2>splot() - Edge Parameters (Complete Reference)</h2>
+
+        <div class="grid-2">
+            <div>
+                <h3>Basic Edge Styling</h3>
+                <table class="table-compact">
+                    <tr><th>Parameter</th><th>Default</th><th>Description</th></tr>
+                    <tr><td><code>edge_color</code></td><td>NULL</td><td>Color(s). NULL = auto by weight sign</td></tr>
+                    <tr><td><code>edge_width</code></td><td>NULL</td><td>Width(s). NULL = scale by weight</td></tr>
+                    <tr><td><code>edge_style</code></td><td>1</td><td>1=solid, 2=dashed, 3=dotted...</td></tr>
+                    <tr><td><code>edge_alpha</code></td><td>0.8</td><td>Transparency (0-1)</td></tr>
+                    <tr><td><code>edge_size</code></td><td>auto</td><td>Base size for weight scaling</td></tr>
+                    <tr><td><code>edge_width_range</code></td><td>c(0.5, 4)</td><td>Output width range</td></tr>
+                    <tr><td><code>edge_scale_mode</code></td><td>"linear"</td><td>linear, log, sqrt, rank</td></tr>
+                </table>
+
+                <h3>Default Color Convention</h3>
+                <p style="font-size: 1.05rem; margin-top: 10px;">
+                    <span class="swatch" style="background: #2E7D32;"></span><strong>Positive:</strong> #2E7D32 (green)<br>
+                    <span class="swatch" style="background: #C62828;"></span><strong>Negative:</strong> #C62828 (red)<br>
+                    <span class="swatch" style="background: gray;"></span><strong>Zero/NA:</strong> gray50
+                </p>
+            </div>
+            <div>
+                <h3>Arrows & Curvature</h3>
+                <table class="table-compact">
+                    <tr><th>Parameter</th><th>Default</th><th>Description</th></tr>
+                    <tr><td><code>show_arrows</code></td><td>auto</td><td>TRUE for directed networks</td></tr>
+                    <tr><td><code>arrow_size</code></td><td>0.015</td><td>Arrow head size</td></tr>
+                    <tr><td><code>arrow_angle</code></td><td>π/6</td><td>Arrow head angle (radians)</td></tr>
+                    <tr><td><code>bidirectional</code></td><td>FALSE</td><td>Arrows at both ends</td></tr>
+                    <tr><td><code>curvature</code></td><td>0</td><td>Edge bend (0 = straight)</td></tr>
+                    <tr><td><code>curves</code></td><td>TRUE</td><td>Auto-curve reciprocal edges</td></tr>
+                    <tr><td><code>loop_rotation</code></td><td>auto</td><td>Self-loop angle (radians)</td></tr>
+                </table>
+
+                <div class="card card-dark mt-20">
+<pre style="margin: 0; font-size: 0.9rem;"><code><span class="function">splot</span>(net,
+      edge_color = <span class="string">"weight"</span>,      <span class="comment"># Color by sign</span>
+      edge_width = <span class="string">"weight"</span>,      <span class="comment"># Width by magnitude</span>
+      edge_scale_mode = <span class="string">"sqrt"</span>,   <span class="comment"># Compress range</span>
+      curvature = <span class="number">0.2</span>,            <span class="comment"># Slight curve</span>
+      arrow_size = <span class="number">0.02</span>)          <span class="comment"># Larger arrows</span></code></pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide-footer">
+            <span>cograph - Modern Network Visualization</span>
+            <span>11</span>
+        </div>
+    </div>
+
+    <!-- Slide 12: Edge Labels and CI -->
+    <div class="slide">
+        <h2>splot() - Edge Labels & Confidence Intervals</h2>
+
+        <div class="grid-2">
+            <div>
+                <h3>Edge Label Parameters</h3>
+                <table class="table-compact">
+                    <tr><th>Parameter</th><th>Default</th><th>Description</th></tr>
+                    <tr><td><code>edge_labels</code></td><td>FALSE</td><td>TRUE, FALSE, or character vector</td></tr>
+                    <tr><td><code>edge_label_size</code></td><td>0.8</td><td>Font size</td></tr>
+                    <tr><td><code>edge_label_color</code></td><td>"black"</td><td>Text color</td></tr>
+                    <tr><td><code>edge_label_bg</code></td><td>NA</td><td>Background (NA = transparent)</td></tr>
+                    <tr><td><code>edge_label_halo</code></td><td>TRUE</td><td>White outline for readability</td></tr>
+                    <tr><td><code>edge_label_position</code></td><td>0.5</td><td>Position along edge (0-1)</td></tr>
+                    <tr><td><code>edge_label_offset</code></td><td>0</td><td>Perpendicular offset</td></tr>
+                    <tr><td><code>edge_label_fontface</code></td><td>"plain"</td><td>plain, bold, italic</td></tr>
+                </table>
+
+                <div class="card card-dark mt-20">
+<pre style="margin: 0; font-size: 0.9rem;"><code><span class="function">splot</span>(net,
+      edge_labels = <span class="keyword">TRUE</span>,
+      edge_label_size = <span class="number">0.7</span>,
+      edge_label_halo = <span class="keyword">TRUE</span>,    <span class="comment"># Readable over edges</span>
+      edge_label_bg = <span class="keyword">NA</span>)        <span class="comment"># No background box</span></code></pre>
+                </div>
+            </div>
+            <div>
+                <h3>Confidence Interval Visualization</h3>
+                <p>Show uncertainty as translucent edge underlays.</p>
+
+                <table class="table-compact">
+                    <tr><th>Parameter</th><th>Default</th><th>Description</th></tr>
+                    <tr><td><code>edge_ci</code></td><td>NULL</td><td>CI widths vector (0-1 scale)</td></tr>
+                    <tr><td><code>edge_ci_scale</code></td><td>2</td><td>Width multiplier for underlay</td></tr>
+                    <tr><td><code>edge_ci_alpha</code></td><td>0.15</td><td>Underlay transparency</td></tr>
+                    <tr><td><code>edge_ci_color</code></td><td>NA</td><td>Underlay color (NA = edge color)</td></tr>
+                    <tr><td><code>edge_ci_style</code></td><td>2</td><td>Line type (2 = dashed)</td></tr>
+                    <tr><td><code>edge_priority</code></td><td>NULL</td><td>Render order (higher = on top)</td></tr>
+                </table>
+
+                <div class="card card-dark mt-20">
+<pre style="margin: 0; font-size: 0.9rem;"><code><span class="comment"># Visualize bootstrap CIs</span>
+<span class="function">splot</span>(net,
+      edge_ci = boot$ci_upper - boot$ci_lower,
+      edge_ci_scale = <span class="number">3</span>,
+      edge_ci_alpha = <span class="number">0.2</span>,
+      edge_priority = <span class="function">ifelse</span>(sig, <span class="number">2</span>, <span class="number">1</span>))</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide-footer">
+            <span>cograph - Modern Network Visualization</span>
+            <span>12</span>
+        </div>
+    </div>
+
+    <!-- Slide 13: Statistical Section -->
+    <div class="slide slide-section">
+        <div class="icon">📈</div>
+        <h2>Statistical Plotting</h2>
+        <p>Validation results are directly plottable with automatic styling</p>
+        <div class="slide-footer">
+            <span></span>
+            <span style="color: rgba(255,255,255,0.5);">13</span>
+        </div>
+    </div>
+
+    <!-- Slide 14: Bootstrap Visualization -->
+    <div class="slide">
+        <h2>Bootstrap Visualization</h2>
+
+        <div class="grid-2-1">
+            <div>
+                <h3>How It Works</h3>
+                <p>Run <code>bootstrap()</code> on a tna model, then pass the result directly to <code>splot()</code>. The styling is automatic - significant edges appear prominent, non-significant edges are subtle.</p>
+
+                <div class="card card-dark mt-20">
+<pre style="margin: 0;"><code><span class="comment"># Run bootstrap analysis</span>
+boot <- <span class="function">bootstrap</span>(tna_model,
+                  iter = <span class="number">1000</span>,
+                  level = <span class="number">0.05</span>,
+                  method = <span class="string">"stability"</span>)
+
+<span class="comment"># Plot directly - styling is automatic!</span>
+<span class="function">splot</span>(boot)
+
+<span class="comment"># Customize if needed</span>
+<span class="function">splot</span>(boot,
+      title = <span class="string">"Bootstrap Results"</span>,
+      theme = <span class="string">"minimal"</span>)</code></pre>
+                </div>
+
+                <h3>What bootstrap() Returns</h3>
+                <table class="table-compact">
+                    <tr><th>Field</th><th>Description</th></tr>
+                    <tr><td><code>$weights</code></td><td>Original weight matrix</td></tr>
+                    <tr><td><code>$weights_sig</code></td><td>Significant weights only</td></tr>
+                    <tr><td><code>$p_values</code></td><td>Edge p-values matrix</td></tr>
+                    <tr><td><code>$ci_lower</code>, <code>$ci_upper</code></td><td>Confidence bounds</td></tr>
+                    <tr><td><code>$significant</code></td><td>Logical significance matrix</td></tr>
+                </table>
+            </div>
+            <div>
+                <h3>Auto Styling</h3>
+                <table class="table-compact">
+                    <tr><th></th><th>Significant</th><th>Non-Sig</th></tr>
+                    <tr>
+                        <td>Color</td>
+                        <td><span class="swatch" style="background:#003355;"></span>#003355</td>
+                        <td><span class="swatch" style="background:#E091AA;"></span>#E091AA</td>
+                    </tr>
+                    <tr><td>Style</td><td>Solid</td><td>Dashed</td></tr>
+                    <tr><td>Labels</td><td><strong>0.45***</strong></td><td>0.12</td></tr>
+                    <tr><td>Alpha</td><td>0.7</td><td>0.4</td></tr>
+                    <tr><td>CI scale</td><td>1.0</td><td>3.0</td></tr>
+                    <tr><td>Priority</td><td>On top</td><td>Behind</td></tr>
+                </table>
+
+                <div class="tip mt-20">
+                    <strong>Stars indicate p-value:</strong><br>
+                    *** p < 0.001<br>
+                    ** p < 0.01<br>
+                    * p < 0.05
+                </div>
+            </div>
+        </div>
+
+        <div class="slide-footer">
+            <span>cograph - Modern Network Visualization</span>
+            <span>14</span>
+        </div>
+    </div>
+
+    <!-- Slide 15: Other Validation -->
+    <div class="slide">
+        <h2>Other Validation Functions</h2>
+
+        <div class="grid-2">
+            <div class="card">
+                <h4>permutation_test() - Network Comparison</h4>
+                <p>Statistical comparison of two networks with p-values for edge and centrality differences.</p>
+<pre style="font-size: 0.85rem;"><code>perm <- <span class="function">permutation_test</span>(tna1, tna2,
+                        iter = <span class="number">1000</span>,
+                        paired = <span class="keyword">FALSE</span>,
+                        measures = <span class="function">c</span>(<span class="string">"InStrength"</span>, <span class="string">"OutStrength"</span>))
+
+<span class="comment"># Returns: $edge_p, $edge_diff, $centrality_p</span>
+<span class="function">plot</span>(perm)  <span class="comment"># Visualize results</span></code></pre>
+            </div>
+            <div class="card">
+                <h4>estimate_cs() - Centrality Stability</h4>
+                <p>CS-coefficient: how stable are centrality rankings when dropping cases?</p>
+<pre style="font-size: 0.85rem;"><code>cs <- <span class="function">estimate_cs</span>(tna_model,
+                  measures = <span class="function">c</span>(<span class="string">"InStrength"</span>, <span class="string">"Betweenness"</span>),
+                  iter = <span class="number">1000</span>,
+                  drop_prop = <span class="function">seq</span>(<span class="number">0.1</span>, <span class="number">0.9</span>, <span class="number">0.1</span>))
+
+<span class="comment"># CS > 0.5 acceptable, > 0.7 good</span>
+<span class="function">plot</span>(cs)  <span class="comment"># Stability curves</span></code></pre>
+            </div>
+            <div class="card">
+                <h4>disparity_filter() - Backbone Extraction</h4>
+                <p>Extract statistically significant edges using Serrano et al. (2009) method.</p>
+<pre style="font-size: 0.85rem;"><code>backbone <- <span class="function">disparity_filter</span>(mat, level = <span class="number">0.05</span>)
+
+<span class="comment"># Returns: $backbone, $p_values, $weights</span>
+<span class="function">splot</span>(backbone)  <span class="comment"># Plot filtered network</span></code></pre>
+            </div>
+            <div class="card">
+                <h4>plot_compare() - Visual Difference</h4>
+                <p>Visualize element-wise difference between networks (x - y).</p>
+<pre style="font-size: 0.85rem;"><code><span class="function">plot_compare</span>(net1, net2)
+
+<span class="comment"># Green edges: net1 > net2 (positive diff)</span>
+<span class="comment"># Red edges: net1 < net2 (negative diff)</span>
+
+<span class="comment"># For group_tna: compare groups</span>
+<span class="function">plot_compare</span>(group_tna, i = <span class="number">1</span>, j = <span class="number">2</span>)</code></pre>
+            </div>
+        </div>
+
+        <div class="highlight mt-20">
+            <strong>Enabling validation for non-TNA networks:</strong> Use <code>set_raw_data(net, data)</code> to attach raw sequence data, then validation functions will work.
+        </div>
+
+        <div class="slide-footer">
+            <span>cograph - Modern Network Visualization</span>
+            <span>15</span>
+        </div>
+    </div>
+
+    <!-- Slide 16: Pipe Workflow -->
+    <div class="slide">
+        <h2>Pipe-Friendly Workflow</h2>
+
+        <div class="grid-2">
+            <div>
+                <h3>The sn_* Functions</h3>
+                <p>All <code>sn_*()</code> functions take a network, modify it, and return the modified copy. This enables fluent chaining with the pipe operator.</p>
+
+                <table class="table-compact">
+                    <tr><th>Function</th><th>Purpose</th></tr>
+                    <tr><td><code>sn_layout(net, layout, seed)</code></td><td>Set layout algorithm</td></tr>
+                    <tr><td><code>sn_theme(net, theme)</code></td><td>Apply visual theme</td></tr>
+                    <tr><td><code>sn_palette(net, palette, target, by)</code></td><td>Apply color palette</td></tr>
+                    <tr><td><code>sn_nodes(net, fill, size, ...)</code></td><td>Set node aesthetics</td></tr>
+                    <tr><td><code>sn_edges(net, color, width, ...)</code></td><td>Set edge aesthetics</td></tr>
+                    <tr><td><code>sn_save(net, file, width, height)</code></td><td>Save to file</td></tr>
+                </table>
+
+                <div class="tip mt-20">
+                    <strong>Immutable:</strong> Each function returns a new object. The original network is never modified.
+                </div>
+            </div>
+            <div>
+                <div class="card card-dark">
+                    <h4>Complete Example</h4>
+<pre style="margin: 0; font-size: 0.95rem;"><code><span class="function">cograph</span>(mat) |>
+
+  <span class="comment"># Layout</span>
+  <span class="function">sn_layout</span>(<span class="string">"circle"</span>, seed = <span class="number">42</span>) |>
+
+  <span class="comment"># Theme</span>
+  <span class="function">sn_theme</span>(<span class="string">"dark"</span>) |>
+
+  <span class="comment"># Node styling</span>
+  <span class="function">sn_nodes</span>(
+    fill = <span class="string">"coral"</span>,
+    size = <span class="number">0.08</span>,
+    shape = <span class="string">"hexagon"</span>,
+    border_color = <span class="string">"white"</span>
+  ) |>
+
+  <span class="comment"># Edge styling</span>
+  <span class="function">sn_edges</span>(
+    color = <span class="string">"weight"</span>,
+    width = <span class="string">"weight"</span>,
+    alpha = <span class="number">0.7</span>
+  ) |>
+
+  <span class="comment"># Color nodes by centrality</span>
+  <span class="function">sn_palette</span>(<span class="string">"viridis"</span>,
+             target = <span class="string">"nodes"</span>,
+             by = <span class="string">"degree"</span>) |>
+
+  <span class="comment"># Plot</span>
+  <span class="function">splot</span>(title = <span class="string">"Styled Network"</span>)</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide-footer">
+            <span>cograph - Modern Network Visualization</span>
+            <span>16</span>
+        </div>
+    </div>
+
+    <!-- Slide 17: Themes -->
+    <div class="slide">
+        <h2>Built-in Themes</h2>
+
+        <div class="grid-4">
+            <div class="card" style="background: white; text-align: center;">
+                <h4>classic</h4>
+                <p style="font-size: 0.9rem;">White bg, blue nodes<br>(default)</p>
+            </div>
+            <div class="card" style="background: #1e293b; color: white; text-align: center;">
+                <h4 style="color: #67e8f9;">dark</h4>
+                <p style="font-size: 0.9rem; color: #94a3b8;">Dark bg, light elements</p>
+            </div>
+            <div class="card" style="background: #fafafa; text-align: center;">
+                <h4>minimal</h4>
+                <p style="font-size: 0.9rem;">Subtle, clean styling</p>
+            </div>
+            <div class="card" style="background: white; text-align: center;">
+                <h4 style="color: #0072B2;">colorblind</h4>
+                <p style="font-size: 0.9rem;">CVD-friendly colors</p>
+            </div>
+            <div class="card" style="background: white; text-align: center;">
+                <h4 style="color: #666;">gray</h4>
+                <p style="font-size: 0.9rem;">Print-friendly B&W</p>
+            </div>
+            <div class="card" style="background: #e8f5e9; text-align: center;">
+                <h4 style="color: #2e7d32;">nature</h4>
+                <p style="font-size: 0.9rem;">Earth tones</p>
+            </div>
+            <div class="card" style="background: linear-gradient(135deg, #440154, #21918c, #fde725); text-align: center;">
+                <h4 style="color: white;">viridis</h4>
+                <p style="font-size: 0.9rem; color: white;">Viridis palette</p>
+            </div>
+            <div class="card" style="background: #f1f5f9; text-align: center;">
+                <h4>+ custom</h4>
+                <p style="font-size: 0.9rem;">register_theme()</p>
+            </div>
+        </div>
+
+        <div class="grid-2 mt-20">
+            <div>
+                <h3>Using Themes</h3>
+<pre><code><span class="comment"># Direct in splot()</span>
+<span class="function">splot</span>(net, theme = <span class="string">"dark"</span>)
+
+<span class="comment"># Or via pipe</span>
+<span class="function">cograph</span>(mat) |> <span class="function">sn_theme</span>(<span class="string">"colorblind"</span>) |> <span class="function">splot</span>()</code></pre>
+            </div>
+            <div>
+                <h3>Register Custom Theme</h3>
+<pre><code><span class="function">register_theme</span>(<span class="string">"mytheme"</span>, <span class="function">list</span>(
+  background = <span class="string">"#1a1a2e"</span>,
+  node_fill = <span class="string">"#e94560"</span>,
+  node_border = <span class="string">"#ffffff"</span>,
+  edge_color = <span class="string">"#0f3460"</span>
+))</code></pre>
+            </div>
+        </div>
+
+        <h3>Built-in Palettes</h3>
+        <p><code>palette_viridis(n)</code> • <code>palette_colorblind(n)</code> • <code>palette_pastel(n)</code> • <code>palette_rainbow(n)</code> • <code>palette_blues(n)</code> • <code>palette_reds(n)</code> • <code>palette_diverging(n)</code></p>
+
+        <div class="slide-footer">
+            <span>cograph - Modern Network Visualization</span>
+            <span>17</span>
+        </div>
+    </div>
+
+    <!-- Slide 18: Layouts -->
+    <div class="slide">
+        <h2>Layout Algorithms</h2>
+
+        <div class="grid-2">
+            <div>
+                <h3>Built-in Layouts</h3>
+                <table class="table-compact">
+                    <tr><th>Name</th><th>Aliases</th><th>Description</th></tr>
+                    <tr><td><code>"spring"</code></td><td>"fr"</td><td>Force-directed (Fruchterman-Reingold)</td></tr>
+                    <tr><td><code>"circle"</code></td><td>-</td><td>Circular arrangement</td></tr>
+                    <tr><td><code>"oval"</code></td><td>"ellipse"</td><td>Elliptical arrangement</td></tr>
+                    <tr><td><code>"groups"</code></td><td>-</td><td>Grouped circular (by cluster)</td></tr>
+                    <tr><td><code>"grid"</code></td><td>-</td><td>Regular grid</td></tr>
+                    <tr><td><code>"star"</code></td><td>-</td><td>Center node with ring</td></tr>
+                    <tr><td><code>"bipartite"</code></td><td>-</td><td>Two-column layout</td></tr>
+                    <tr><td><code>"random"</code></td><td>-</td><td>Random positions</td></tr>
+                </table>
+
+                <h3>igraph Layout Codes</h3>
+                <table class="table-compact">
+                    <tr><th>Code</th><th>Algorithm</th></tr>
+                    <tr><td><code>"kk"</code></td><td>Kamada-Kawai</td></tr>
+                    <tr><td><code>"drl"</code></td><td>DrL (large graphs)</td></tr>
+                    <tr><td><code>"mds"</code></td><td>Multidimensional scaling</td></tr>
+                    <tr><td><code>"ni"</code></td><td>Nicely (auto-select)</td></tr>
+                    <tr><td><code>"tr"</code></td><td>Tree / Reingold-Tilford</td></tr>
+                </table>
+            </div>
+            <div>
+                <h3>Using Layouts</h3>
+<pre><code><span class="comment"># In splot()</span>
+<span class="function">splot</span>(net, layout = <span class="string">"spring"</span>, seed = <span class="number">42</span>)
+
+<span class="comment"># Via pipe</span>
+<span class="function">cograph</span>(mat) |>
+  <span class="function">sn_layout</span>(<span class="string">"circle"</span>) |>
+  <span class="function">splot</span>()
+
+<span class="comment"># Custom matrix</span>
+<span class="function">splot</span>(net, layout = my_coords)  <span class="comment"># n×2 matrix</span>
+
+<span class="comment"># igraph layout function</span>
+<span class="function">splot</span>(net, layout = igraph::layout_with_fr)</code></pre>
+
+                <h3>Register Custom Layout</h3>
+<pre><code><span class="function">register_layout</span>(<span class="string">"spiral"</span>, <span class="keyword">function</span>(network, ...) {
+  n <- <span class="function">n_nodes</span>(network)
+  t <- <span class="function">seq</span>(<span class="number">0</span>, <span class="number">4</span> * pi, length.out = n)
+  <span class="function">data.frame</span>(x = t * <span class="function">cos</span>(t),
+             y = t * <span class="function">sin</span>(t))
+})
+
+<span class="function">splot</span>(net, layout = <span class="string">"spiral"</span>)</code></pre>
+
+                <div class="tip">
+                    <strong>Reproducibility:</strong> Always set <code>seed</code> for deterministic layouts.
+                </div>
+            </div>
+        </div>
+
+        <div class="slide-footer">
+            <span>cograph - Modern Network Visualization</span>
+            <span>18</span>
+        </div>
+    </div>
+
+    <!-- Slide 19: TNA Integration -->
+    <div class="slide">
+        <h2>TNA Integration</h2>
+
+        <div class="feature-box">
+            <h3>TNA-First Design</h3>
+            <p>cograph is built with the <strong>tna</strong> (Transition Network Analysis) package as a primary use case. All TNA metadata is preserved for seamless round-trip compatibility.</p>
+        </div>
+
+        <div class="grid-2 mt-20">
+            <div>
+                <h3>Basic TNA Plotting</h3>
+<pre><code><span class="keyword">library</span>(tna)
+model <- <span class="function">tna</span>(engagement_data)
+
+<span class="comment"># Direct plotting - just works!</span>
+<span class="function">splot</span>(model)
+
+<span class="comment"># With TNA-specific features</span>
+<span class="function">splot</span>(model,
+      donut_fill = model$inits,     <span class="comment"># Initial probs</span>
+      node_fill = <span class="function">attr</span>(model$data, <span class="string">"colors"</span>),
+      edge_labels = <span class="keyword">TRUE</span>)</code></pre>
+
+                <h3>TNA Helper Functions</h3>
+                <table class="table-compact">
+                    <tr><th>Function</th><th>Purpose</th></tr>
+                    <tr><td><code>is_tna_network(net)</code></td><td>Check if TNA-based</td></tr>
+                    <tr><td><code>get_tna_model(net)</code></td><td>Retrieve original tna object</td></tr>
+                    <tr><td><code>get_raw_data(net)</code></td><td>Get sequence data</td></tr>
+                    <tr><td><code>set_raw_data(net, data)</code></td><td>Attach data for validation</td></tr>
+                </table>
+            </div>
+            <div>
+                <h3>group_tna Support</h3>
+<pre><code><span class="comment"># Create group model</span>
+group_model <- <span class="function">group_tna</span>(data, group = <span class="string">"cluster"</span>)
+
+<span class="comment"># Plot individual groups</span>
+<span class="function">splot</span>(group_model, i = <span class="number">1</span>)
+<span class="function">splot</span>(group_model, i = <span class="string">"high_achievers"</span>)
+
+<span class="comment"># Compare groups</span>
+<span class="function">plot_compare</span>(group_model)  <span class="comment"># All pairs</span>
+<span class="function">plot_compare</span>(group_model, i = <span class="number">1</span>, j = <span class="number">2</span>)
+
+<span class="comment"># Bootstrap per group</span>
+<span class="function">bootstrap</span>(group_model, i = <span class="number">1</span>)</code></pre>
+
+                <h3>Preserved TNA Fields</h3>
+                <table class="table-compact">
+                    <tr><th>Field</th><th>Access</th></tr>
+                    <tr><td>Transition weights</td><td><code>net$weights</code></td></tr>
+                    <tr><td>Initial probs</td><td><code>net$nodes$inits</code></td></tr>
+                    <tr><td>State labels</td><td><code>net$labels</code></td></tr>
+                    <tr><td>Original model</td><td><code>get_tna_model(net)</code></td></tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="slide-footer">
+            <span>cograph - Modern Network Visualization</span>
+            <span>19</span>
+        </div>
+    </div>
+
+    <!-- Slide 20: Specialized Plots -->
+    <div class="slide">
+        <h2>Specialized Plot Functions</h2>
+
+        <div class="grid-2">
+            <div class="card">
+                <h4>plot_heatmap() - Network as Heatmap</h4>
+                <p>Visualize adjacency/weight matrix with clustering support.</p>
+<pre style="font-size: 0.85rem;"><code><span class="function">plot_heatmap</span>(net,
+             colors = <span class="string">"viridis"</span>,
+             show_values = <span class="keyword">TRUE</span>,
+             cluster_list = clusters)</code></pre>
+            </div>
+            <div class="card">
+                <h4>plot_mlna() - Multilevel Networks</h4>
+                <p>3D perspective view with stacked layers.</p>
+<pre style="font-size: 0.85rem;"><code><span class="function">plot_mlna</span>(mat,
+         layer_list = <span class="function">list</span>(
+           Macro = nodes1,
+           Meso = nodes2,
+           Micro = nodes3
+         ))</code></pre>
+            </div>
+            <div class="card">
+                <h4>plot_htna() - Bipartite Networks</h4>
+                <p>Heterogeneous/bipartite layout.</p>
+<pre style="font-size: 0.85rem;"><code><span class="function">plot_htna</span>(net,
+         groups = <span class="function">list</span>(
+           Students = student_nodes,
+           Resources = resource_nodes
+         ))</code></pre>
+            </div>
+            <div class="card">
+                <h4>tna_animate() - Animated Networks</h4>
+                <p>Create animated GIF of network evolution.</p>
+<pre style="font-size: 0.85rem;"><code><span class="function">tna_animate</span>(data,
+            window_size = <span class="number">100</span>,
+            step = <span class="number">50</span>,
+            output = <span class="string">"network.gif"</span>)</code></pre>
+            </div>
+        </div>
+
+        <h3>More Specialized Functions</h3>
+        <table class="table-compact">
+            <tr><th>Function</th><th>Purpose</th><th>Key Parameters</th></tr>
+            <tr><td><code>plot_comparison_heatmap()</code></td><td>Side-by-side heatmap comparison</td><td>x, y, titles, colors</td></tr>
+            <tr><td><code>plot_mtna()</code></td><td>Multi-cluster network visualization</td><td>cluster_list, within_edges</td></tr>
+            <tr><td><code>plot_mcml()</code></td><td>Multi-cluster multilevel combination</td><td>layer_list, cluster_list</td></tr>
+            <tr><td><code>plot_ml_heatmap()</code></td><td>Multilayer network as heatmap</td><td>layers, interlayer</td></tr>
+        </table>
+
+        <div class="slide-footer">
+            <span>cograph - Modern Network Visualization</span>
+            <span>20</span>
+        </div>
+    </div>
+
+    <!-- Slide 21: Summary -->
+    <div class="slide">
+        <h2>Summary: Why cograph?</h2>
+
+        <div class="grid-3">
+            <div class="card card-accent">
+                <h4>Simple</h4>
+                <ul class="bullet-compact">
+                    <li><code>splot(data)</code> is enough</li>
+                    <li>Smart defaults for everything</li>
+                    <li>No mandatory configuration</li>
+                    <li>Works with any format</li>
+                </ul>
+            </div>
+            <div class="card card-accent">
+                <h4>Consistent</h4>
+                <ul class="bullet-compact">
+                    <li>snake_case everywhere</li>
+                    <li>Predictable patterns</li>
+                    <li>Discoverable API</li>
+                    <li>Clear documentation</li>
+                </ul>
+            </div>
+            <div class="card card-accent">
+                <h4>Powerful</h4>
+                <ul class="bullet-compact">
+                    <li>Full customization available</li>
+                    <li>Statistical validation built-in</li>
+                    <li>TNA-first design</li>
+                    <li>Extensible registries</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="grid-2 mt-20">
+            <div>
+                <h3>Key Functions to Remember</h3>
+                <table class="table-compact">
+                    <tr><td><code>splot(x)</code></td><td>Main plotting function</td></tr>
+                    <tr><td><code>cograph(x)</code></td><td>Create network with layout</td></tr>
+                    <tr><td><code>as_cograph(x)</code></td><td>Convert to cograph format</td></tr>
+                    <tr><td><code>sn_*()</code></td><td>Pipe-friendly transforms</td></tr>
+                    <tr><td><code>bootstrap()</code></td><td>Edge significance testing</td></tr>
+                    <tr><td><code>plot_compare()</code></td><td>Network difference visualization</td></tr>
+                </table>
+            </div>
+            <div>
+                <h3>Getting Started</h3>
+                <div class="card card-dark">
+<pre style="margin: 0;"><code><span class="comment"># Install</span>
+<span class="function">install.packages</span>(<span class="string">"cograph"</span>)
+
+<span class="comment"># Load</span>
+<span class="keyword">library</span>(cograph)
+
+<span class="comment"># Plot your network</span>
+<span class="function">splot</span>(your_matrix)
+
+<span class="comment"># That's it!</span></code></pre>
+                </div>
+
+                <div class="tip mt-20">
+                    <strong>Documentation:</strong> <code>?splot</code> for full parameter reference
+                </div>
+            </div>
+        </div>
+
+        <div class="slide-footer">
+            <span>cograph - Modern Network Visualization</span>
+            <span>21</span>
+        </div>
+    </div>
+
+    <!-- Slide 22: Thank You -->
+    <div class="slide slide-title">
+        <h1 style="font-size: 4rem;">Thank You</h1>
+        <div class="tagline" style="font-size: 1.6rem;">github.com/mohsaqr/cograph</div>
+        <div class="version" style="margin-top: 50px;">
+            Questions?
+        </div>
+        <div class="author" style="margin-top: 40px; font-size: 1.2rem;">
+            Mohammed Saqr<br>
+            <span style="opacity: 0.7;">mohammed.saqr@uef.fi</span>
+        </div>
+        <div class="slide-footer" style="border-top-color: rgba(255,255,255,0.2);">
+            <span style="color: rgba(255,255,255,0.5);">cograph v1.5.2</span>
+            <span style="color: rgba(255,255,255,0.5);">22</span>
+        </div>
+    </div>
+
+</body>
+</html>
