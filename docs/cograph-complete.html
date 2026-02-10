@@ -1380,6 +1380,231 @@ centrality(adj, directed = TRUE, mode = "in")</code></pre>
 
 <p>This section documents the merge of <code>upstream/main</code> (sonsoleslp/cograph) with <code>cograph_plotonly</code> to create the <code>cograph_merged</code> branch.</p>
 
+<h3>Changes from sonsoleslp/cograph (upstream)</h3>
+
+<p>Comprehensive comparison between <code>upstream/main</code> and <code>cograph_merged</code>.</p>
+
+<h4>Summary Statistics</h4>
+<table>
+  <tr><th>Metric</th><th>upstream/main</th><th>cograph_merged</th><th>Change</th></tr>
+  <tr><td>Exported Functions</td><td>66</td><td>126</td><td style="color: #059669;">+60</td></tr>
+  <tr><td>R Files</td><td>56</td><td>66</td><td style="color: #059669;">+10</td></tr>
+  <tr><td>Lines Added</td><td>—</td><td>—</td><td style="color: #059669;">+6,068</td></tr>
+  <tr><td>Lines Removed</td><td>—</td><td>—</td><td style="color: #dc2626;">-726</td></tr>
+  <tr><td>Net Change</td><td>—</td><td>—</td><td style="color: #059669;">+5,342 lines</td></tr>
+</table>
+
+<h4>New R Files (10 files added)</h4>
+<table>
+  <tr><th>File</th><th>Lines</th><th>Description</th></tr>
+  <tr><td><code>R/cluster-metrics.R</code></td><td>+864</td><td>Community detection, cluster quality metrics, color_communities()</td></tr>
+  <tr><td><code>R/network-utils.R</code></td><td>+670</td><td>Conversion utilities: to_igraph(), to_matrix(), to_df(), filter_nodes(), filter_edges()</td></tr>
+  <tr><td><code>R/plot-heatmap.R</code></td><td>+651</td><td>plot_heatmap(), plot_comparison_heatmap() for weight matrix visualization</td></tr>
+  <tr><td><code>R/plot-compare.R</code></td><td>+603</td><td>plot_compare() for difference network visualization (x - y)</td></tr>
+  <tr><td><code>R/plot-ml-heatmap.R</code></td><td>+342</td><td>plot_ml_heatmap() for multi-layer heatmap grids</td></tr>
+  <tr><td><code>R/network-summary.R</code></td><td>+325</td><td>network_summary(), degree_distribution()</td></tr>
+  <tr><td><code>R/centrality.R</code></td><td>+285</td><td>14 centrality functions (degree, betweenness, pagerank, etc.)</td></tr>
+  <tr><td><code>R/tna-animate.R</code></td><td>+277</td><td>tna_animate(), tna_windows() for animated GIF networks</td></tr>
+  <tr><td><code>R/plot-mcml.R</code></td><td>+254</td><td>plot_mcml(), mcml() for multi-cluster multi-layer plots</td></tr>
+  <tr><td><code>R/plot-mixed-network.R</code></td><td>+178</td><td>plot_mixed_network() with vectorized per-edge curvature</td></tr>
+</table>
+
+<h4>Significantly Modified Files</h4>
+<table>
+  <tr><th>File</th><th>Changes</th><th>Key Modifications</th></tr>
+  <tr><td><code>R/class-network.R</code></td><td>+403/-154</td><td>Enhanced cograph_network S3 structure, lean design, TNA metadata</td></tr>
+  <tr><td><code>R/splot.R</code></td><td>+186/-41</td><td>edge_label_halo, edge_priority, vectorized curvature, leading_zero</td></tr>
+  <tr><td><code>R/layout-registry.R</code></td><td>+168/-134</td><td>Refactored layout system, added layout_oval() for TNA</td></tr>
+  <tr><td><code>R/splot-nodes.R</code></td><td>+148/-1</td><td>Enhanced donut/pie charts, per-node customization</td></tr>
+  <tr><td><code>R/cograph.R</code></td><td>+126/-79</td><td>Improved input handling, full TNA integration</td></tr>
+  <tr><td><code>R/input-tna.R</code></td><td>+101/-14</td><td>Full tna/group_tna support, color extraction, group handling</td></tr>
+  <tr><td><code>R/plot-htna-multi.R</code></td><td>+82/-37</td><td>Enhanced multi-group TNA plotting</td></tr>
+  <tr><td><code>R/render-ggplot.R</code></td><td>+65/-24</td><td>Improved ggplot2 rendering</td></tr>
+  <tr><td><code>R/render-grid.R</code></td><td>+52/-17</td><td>Enhanced grid graphics rendering</td></tr>
+  <tr><td><code>R/mlna.R</code></td><td>+44/-17</td><td>Multi-layer network improvements</td></tr>
+</table>
+
+<h4>New Exported Functions (+60 total)</h4>
+
+<p><strong>Centrality Analysis (15 functions):</strong></p>
+<div class="func-list">
+  <div class="func-list-item">centrality()</div>
+  <div class="func-list-item">centrality_degree()</div>
+  <div class="func-list-item">centrality_strength()</div>
+  <div class="func-list-item">centrality_betweenness()</div>
+  <div class="func-list-item">centrality_closeness()</div>
+  <div class="func-list-item">centrality_eigenvector()</div>
+  <div class="func-list-item">centrality_pagerank()</div>
+  <div class="func-list-item">centrality_authority()</div>
+  <div class="func-list-item">centrality_hub()</div>
+  <div class="func-list-item">centrality_eccentricity()</div>
+  <div class="func-list-item">centrality_coreness()</div>
+  <div class="func-list-item">centrality_constraint()</div>
+  <div class="func-list-item">centrality_transitivity()</div>
+  <div class="func-list-item">network_summary()</div>
+  <div class="func-list-item">degree_distribution()</div>
+</div>
+
+<p><strong>Community/Cluster Analysis (6 functions):</strong></p>
+<div class="func-list">
+  <div class="func-list-item">detect_communities()</div>
+  <div class="func-list-item">color_communities()</div>
+  <div class="func-list-item">cluster_quality()</div>
+  <div class="func-list-item">cluster_summary()</div>
+  <div class="func-list-item">cqual()</div>
+  <div class="func-list-item">csum()</div>
+</div>
+
+<p><strong>Multi-Layer Analysis (16 functions):</strong></p>
+<div class="func-list">
+  <div class="func-list-item">layer_similarity()</div>
+  <div class="func-list-item">layer_similarity_matrix()</div>
+  <div class="func-list-item">layer_degree_correlation()</div>
+  <div class="func-list-item">lsim()</div>
+  <div class="func-list-item">lsim_matrix()</div>
+  <div class="func-list-item">ldegcor()</div>
+  <div class="func-list-item">supra_adjacency()</div>
+  <div class="func-list-item">supra_layer()</div>
+  <div class="func-list-item">supra_interlayer()</div>
+  <div class="func-list-item">supra()</div>
+  <div class="func-list-item">aggregate_layers()</div>
+  <div class="func-list-item">aggregate_weights()</div>
+  <div class="func-list-item">extract_layer()</div>
+  <div class="func-list-item">extract_interlayer()</div>
+  <div class="func-list-item">lagg()</div>
+  <div class="func-list-item">wagg()</div>
+</div>
+
+<p><strong>Specialized Plots (7 functions):</strong></p>
+<div class="func-list">
+  <div class="func-list-item">plot_compare()</div>
+  <div class="func-list-item">plot_heatmap()</div>
+  <div class="func-list-item">plot_comparison_heatmap()</div>
+  <div class="func-list-item">plot_ml_heatmap()</div>
+  <div class="func-list-item">plot_mcml()</div>
+  <div class="func-list-item">plot_mixed_network()</div>
+  <div class="func-list-item">mcml()</div>
+</div>
+
+<p><strong>Animation (2 functions):</strong></p>
+<div class="func-list">
+  <div class="func-list-item">tna_animate()</div>
+  <div class="func-list-item">tna_windows()</div>
+</div>
+
+<p><strong>Conversion &amp; Utilities (14 functions):</strong></p>
+<div class="func-list">
+  <div class="func-list-item">to_igraph()</div>
+  <div class="func-list-item">to_matrix()</div>
+  <div class="func-list-item">to_data_frame()</div>
+  <div class="func-list-item">to_df()</div>
+  <div class="func-list-item">to_network()</div>
+  <div class="func-list-item">to_cograph()</div>
+  <div class="func-list-item">filter_nodes()</div>
+  <div class="func-list-item">filter_edges()</div>
+  <div class="func-list-item">verify_igraph()</div>
+  <div class="func-list-item">verify_with_igraph()</div>
+  <div class="func-list-item">htna()</div>
+  <div class="func-list-item">is_tna_network()</div>
+  <div class="func-list-item">get_groups()</div>
+  <div class="func-list-item">set_groups()</div>
+</div>
+
+<h4>New splot() Parameters</h4>
+<table>
+  <tr><th>Parameter</th><th>Description</th><th>Default</th></tr>
+  <tr><td><code>edge_label_halo</code></td><td>White outline around edge labels for readability over dark edges</td><td><code>TRUE</code></td></tr>
+  <tr><td><code>edge_priority</code></td><td>Numeric vector controlling edge render order (higher = on top)</td><td><code>NULL</code></td></tr>
+  <tr><td><code>edge_label_leading_zero</code></td><td>Show leading zero for values &lt; 1 (0.5 vs .5)</td><td><code>TRUE</code></td></tr>
+  <tr><td><code>curvature</code></td><td>Now supports <strong>per-edge vector</strong> values for fine control</td><td><code>NULL</code></td></tr>
+  <tr><td><code>edge_ci_scale</code></td><td>Per-edge CI underlay scaling factor</td><td><code>NULL</code></td></tr>
+  <tr><td><code>edge_ci_alpha</code></td><td>Per-edge CI underlay transparency</td><td><code>NULL</code></td></tr>
+</table>
+
+<h4>Enhanced Features</h4>
+
+<details>
+  <summary>TNA Integration Improvements</summary>
+  <div class="detail-content">
+    <ul>
+      <li><strong>Auto-detection:</strong> Recognizes <code>tna</code>, <code>group_tna</code>, <code>tna_model</code>, <code>boot_tna</code> classes</li>
+      <li><strong>Color extraction:</strong> Pulls colors from <code>attr(tna$data, "colors")</code> and stores in nodes$color</li>
+      <li><strong>Group support:</strong> <code>i</code> and <code>j</code> parameters for group_tna list indexing</li>
+      <li><strong>Auto titles:</strong> Uses group names for auto-generated plot titles</li>
+      <li><strong>Minimal metadata:</strong> Stores only <code>type</code>, <code>group_name</code>, <code>group_index</code> (not full model)</li>
+      <li><strong>Default layout:</strong> <code>layout = "oval"</code> for TNA plots</li>
+      <li><strong>Default edge color:</strong> <code>#003355</code> (dark blue) for TNA</li>
+    </ul>
+  </div>
+</details>
+
+<details>
+  <summary>Donut Chart Enhancements</summary>
+  <div class="detail-content">
+    <ul>
+      <li><strong>Multiple shapes:</strong> <code>donut_shape</code> supports circle, square, hexagon, triangle, diamond, pentagon</li>
+      <li><strong>Value display:</strong> <code>donut_show_value = TRUE</code> with formatting options</li>
+      <li><strong>Per-node customization:</strong> All donut parameters accept vectors</li>
+      <li><strong>Background color:</strong> <code>donut_bg_color</code> for unfilled portion</li>
+      <li><strong>Inner ratio:</strong> <code>donut_inner_ratio</code> controls hole size</li>
+    </ul>
+  </div>
+</details>
+
+<details>
+  <summary>Edge Rendering Improvements</summary>
+  <div class="detail-content">
+    <ul>
+      <li><strong>Vectorized curvature:</strong> Different curvature value per edge</li>
+      <li><strong>Priority rendering:</strong> <code>edge_priority</code> controls which edges appear on top</li>
+      <li><strong>Label halos:</strong> White outline for readability over dark edges</li>
+      <li><strong>CI underlays:</strong> Per-edge <code>edge_ci_scale</code> and <code>edge_ci_alpha</code></li>
+      <li><strong>Bootstrap visualization:</strong> Significant (solid, bold) vs non-significant (dashed, pink) edge styling</li>
+    </ul>
+  </div>
+</details>
+
+<details>
+  <summary>Layout System Improvements</summary>
+  <div class="detail-content">
+    <ul>
+      <li><strong>layout_oval():</strong> New elliptical layout (default for TNA)</li>
+      <li><strong>layout_groups():</strong> Enhanced group-based positioning</li>
+      <li><strong>Bipartite/polygon:</strong> Improved layouts for heterogeneous networks</li>
+      <li><strong>Refactored registry:</strong> Cleaner layout registration system</li>
+    </ul>
+  </div>
+</details>
+
+<h4>Architectural Changes</h4>
+
+<table>
+  <tr><th>Aspect</th><th>upstream/main</th><th>cograph_merged</th></tr>
+  <tr><td>Network object</td><td>R6 CographNetwork class only</td><td>Lean S3 named list + R6 (both supported)</td></tr>
+  <tr><td>Core fields</td><td>Full R6 object with methods</td><td>Minimal: nodes, edges, weights, directed, source, tna metadata</td></tr>
+  <tr><td>TNA storage</td><td>Not specialized</td><td>Stores minimal metadata (type, group_name, group_index)</td></tr>
+  <tr><td>Getter approach</td><td>R6 methods ($n_nodes, etc.)</td><td>Standalone functions: n_nodes(), get_labels(), etc.</td></tr>
+  <tr><td>Raw data storage</td><td>In network object</td><td>Removed (kept in aside/ for estimation)</td></tr>
+</table>
+
+<h4>Color Conventions</h4>
+<table>
+  <tr><th>Context</th><th>Color</th><th>Hex Code</th></tr>
+  <tr><td>TNA edge color (default)</td><td style="background: #003355; color: white; padding: 2px 8px;">Dark blue</td><td><code>#003355</code></td></tr>
+  <tr><td>Positive difference (plot_compare)</td><td style="background: #009900; color: white; padding: 2px 8px;">Green</td><td><code>#009900</code></td></tr>
+  <tr><td>Negative difference (plot_compare)</td><td style="background: #C62828; color: white; padding: 2px 8px;">Red</td><td><code>#C62828</code></td></tr>
+  <tr><td>Edge positive (splot default)</td><td style="background: #2E7D32; color: white; padding: 2px 8px;">Forest green</td><td><code>#2E7D32</code></td></tr>
+  <tr><td>Edge negative (splot default)</td><td style="background: #C62828; color: white; padding: 2px 8px;">Red</td><td><code>#C62828</code></td></tr>
+  <tr><td>Non-significant bootstrap edge</td><td style="background: #E091AA; color: black; padding: 2px 8px;">Soft pink</td><td><code>#E091AA</code></td></tr>
+</table>
+
+<h4>Bootstrap Visualization Defaults</h4>
+<table>
+  <tr><th>Edge Type</th><th>Line Style</th><th>Label</th><th>CI Underlay</th></tr>
+  <tr><td>Significant</td><td>Solid, dark blue</td><td>Bold, size 0.7, with stars</td><td>Blue, scale 1.0</td></tr>
+  <tr><td>Non-significant</td><td>Dashed, pink (#E091AA)</td><td>Plain, size 0.4</td><td>Pink, scale 3.0</td></tr>
+</table>
+
 <h3>Branch Structure</h3>
 <table>
   <tr><th>Branch</th><th>Purpose</th><th>Status</th></tr>
