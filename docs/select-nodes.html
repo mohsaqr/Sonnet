@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>select_nodes() - Advanced Node Selection - cograph Package</title>
+  <style>
+    :root {
+      --primary: #7c3aed;
+      --primary-dark: #6d28d9;
+      --secondary: #64748b;
+      --success: #16a34a;
+      --warning: #ea580c;
+      --danger: #dc2626;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --code-bg: #1e293b;
+      --code-text: #e2e8f0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 0;
+    }
+
+    .header {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      padding: 3rem 2rem;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .header .subtitle {
+      font-size: 1.2rem;
+      opacity: 0.9;
+    }
+
+    .header .version {
+      display: inline-block;
+      background: rgba(255,255,255,0.2);
+      padding: 0.25rem 0.75rem;
+      border-radius: 1rem;
+      margin-top: 1rem;
+      font-size: 0.9rem;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .toc {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 1.5rem 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .toc h2 {
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+      color: var(--secondary);
+    }
+
+    .toc ul {
+      list-style: none;
+      columns: 2;
+      gap: 2rem;
+    }
+
+    .toc li {
+      margin-bottom: 0.5rem;
+    }
+
+    .toc a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    .toc a:hover {
+      text-decoration: underline;
+    }
+
+    .section {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .section h2 {
+      color: var(--primary);
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .section h3 {
+      color: var(--text);
+      font-size: 1.2rem;
+      margin: 1.5rem 0 0.75rem 0;
+    }
+
+    .section p {
+      margin-bottom: 1rem;
+      color: var(--text);
+    }
+
+    pre {
+      background: var(--code-bg);
+      color: var(--code-text);
+      padding: 1.25rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1rem 0;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    code {
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 0.9em;
+    }
+
+    p code, li code, td code {
+      background: #f1f5f9;
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      color: var(--primary-dark);
+    }
+
+    .func-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+    }
+
+    .func-table th,
+    .func-table td {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .func-table th {
+      background: var(--bg);
+      font-weight: 600;
+      color: var(--secondary);
+    }
+
+    .func-table tr:hover {
+      background: var(--bg);
+    }
+
+    .func-name {
+      font-family: monospace;
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .badge-primary {
+      background: #ede9fe;
+      color: var(--primary);
+    }
+
+    .badge-success {
+      background: #dcfce7;
+      color: var(--success);
+    }
+
+    .badge-warning {
+      background: #ffedd5;
+      color: var(--warning);
+    }
+
+    .badge-new {
+      background: #dbeafe;
+      color: #2563eb;
+    }
+
+    .tip {
+      background: #f0fdf4;
+      border-left: 4px solid var(--success);
+      padding: 1rem 1.25rem;
+      margin: 1rem 0;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .tip-title {
+      font-weight: 600;
+      color: var(--success);
+      margin-bottom: 0.25rem;
+    }
+
+    .warning {
+      background: #fffbeb;
+      border-left: 4px solid var(--warning);
+      padding: 1rem 1.25rem;
+      margin: 1rem 0;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .warning-title {
+      font-weight: 600;
+      color: var(--warning);
+      margin-bottom: 0.25rem;
+    }
+
+    .info {
+      background: #eff6ff;
+      border-left: 4px solid #3b82f6;
+      padding: 1rem 1.25rem;
+      margin: 1rem 0;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .info-title {
+      font-weight: 600;
+      color: #3b82f6;
+      margin-bottom: 0.25rem;
+    }
+
+    ul, ol {
+      margin: 1rem 0;
+      padding-left: 1.5rem;
+    }
+
+    li {
+      margin-bottom: 0.5rem;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    .three-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+      .two-col, .three-col {
+        grid-template-columns: 1fr;
+      }
+      .toc ul {
+        columns: 1;
+      }
+    }
+
+    .comment {
+      color: #6b7280;
+    }
+
+    .string {
+      color: #10b981;
+    }
+
+    .keyword {
+      color: #f472b6;
+    }
+
+    .number {
+      color: #fbbf24;
+    }
+
+    .comparison-table {
+      margin: 1.5rem 0;
+    }
+
+    .comparison-table td:first-child {
+      font-weight: 600;
+    }
+
+    .perf-bar {
+      background: #e2e8f0;
+      border-radius: 4px;
+      height: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .perf-bar-fill {
+      background: linear-gradient(90deg, var(--success), #22c55e);
+      height: 100%;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      padding-left: 8px;
+      color: white;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>select_nodes()</h1>
+  <div class="subtitle">Advanced Node Selection with Lazy Computation</div>
+  <div class="version">cograph 1.5.2</div>
+</div>
+
+<div class="container">
+
+  <nav class="toc">
+    <h2>Contents</h2>
+    <ul>
+      <li><a href="#overview">Overview</a></li>
+      <li><a href="#vs-filter">select_nodes vs filter_nodes</a></li>
+      <li><a href="#selection-modes">Selection Modes</a></li>
+      <li><a href="#global-context">Global Context Variables</a></li>
+      <li><a href="#convenience">Convenience Functions</a></li>
+      <li><a href="#combining">Combining Modes (AND Logic)</a></li>
+      <li><a href="#performance">Performance</a></li>
+      <li><a href="#examples">Complete Examples</a></li>
+    </ul>
+  </nav>
+
+  <!-- Overview -->
+  <section class="section" id="overview">
+    <h2>Overview</h2>
+    <p>
+      <code>select_nodes()</code> is an advanced node selection function that improves upon
+      <code>filter_nodes()</code> with lazy centrality computation, multiple selection modes,
+      and global context variables for structural awareness.
+    </p>
+
+    <h3>Function Signature</h3>
+    <pre>select_nodes(
+  x,
+  ...,                           <span class="comment"># dplyr-style filter expressions</span>
+  name = NULL,                   <span class="comment"># Character vector of node names</span>
+  index = NULL,                  <span class="comment"># Integer vector of node indices</span>
+  top = NULL,                    <span class="comment"># Select top N nodes</span>
+  by = <span class="string">"degree"</span>,                 <span class="comment"># Centrality measure for top selection</span>
+  neighbors_of = NULL,           <span class="comment"># Select neighbors of these nodes</span>
+  order = 1L,                    <span class="comment"># Neighborhood order (1 = direct)</span>
+  component = NULL,              <span class="comment"># "largest", integer, or node name</span>
+  .keep_edges = c(<span class="string">"internal"</span>, <span class="string">"none"</span>),
+  keep_format = FALSE,
+  directed = NULL
+)</pre>
+
+    <div class="tip">
+      <div class="tip-title">Key Features</div>
+      <ul>
+        <li><strong>Lazy computation</strong> - Only computes centrality measures actually referenced</li>
+        <li><strong>Multiple selection modes</strong> - By name, index, top N, neighborhood, component</li>
+        <li><strong>Global context</strong> - Access component membership, articulation points, k-core</li>
+        <li><strong>AND logic</strong> - All modes combine with intersection (like tidygraph)</li>
+        <li><strong>4x faster</strong> than <code>filter_nodes()</code> for simple queries</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Comparison -->
+  <section class="section" id="vs-filter">
+    <h2>select_nodes() vs filter_nodes()</h2>
+
+    <table class="func-table comparison-table">
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th>filter_nodes()</th>
+          <th>select_nodes()</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Expression filtering</td>
+          <td>Yes</td>
+          <td>Yes</td>
+        </tr>
+        <tr>
+          <td>Centrality computation</td>
+          <td>All measures upfront</td>
+          <td><span class="badge badge-success">Lazy (only needed)</span></td>
+        </tr>
+        <tr>
+          <td>Select by name</td>
+          <td>Via expression</td>
+          <td><span class="badge badge-new">Direct parameter</span></td>
+        </tr>
+        <tr>
+          <td>Select by index</td>
+          <td>Via expression</td>
+          <td><span class="badge badge-new">Direct parameter</span></td>
+        </tr>
+        <tr>
+          <td>Top N selection</td>
+          <td>Manual ranking</td>
+          <td><span class="badge badge-new">Built-in</span></td>
+        </tr>
+        <tr>
+          <td>Neighborhood selection</td>
+          <td>Not available</td>
+          <td><span class="badge badge-new">Built-in</span></td>
+        </tr>
+        <tr>
+          <td>Component selection</td>
+          <td>Not available</td>
+          <td><span class="badge badge-new">Built-in</span></td>
+        </tr>
+        <tr>
+          <td>Global context vars</td>
+          <td>Not available</td>
+          <td><span class="badge badge-new">7 variables</span></td>
+        </tr>
+        <tr>
+          <td>Negative weight handling</td>
+          <td>May error</td>
+          <td><span class="badge badge-success">Warns + NA</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>When to Use Which</h3>
+    <div class="two-col">
+      <div>
+        <p><strong>Use <code>filter_nodes()</code> when:</strong></p>
+        <ul>
+          <li>Simple centrality filtering</li>
+          <li>You need all centrality measures anyway</li>
+          <li>Backward compatibility needed</li>
+        </ul>
+      </div>
+      <div>
+        <p><strong>Use <code>select_nodes()</code> when:</strong></p>
+        <ul>
+          <li>Performance matters (large networks)</li>
+          <li>Selecting by name, index, or top N</li>
+          <li>Neighborhood or component extraction</li>
+          <li>Need global context (articulation points, etc.)</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Selection Modes -->
+  <section class="section" id="selection-modes">
+    <h2>Selection Modes</h2>
+
+    <table class="func-table">
+      <thead>
+        <tr>
+          <th>Mode</th>
+          <th>Parameter</th>
+          <th>Example</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Expression</td>
+          <td><code>...</code></td>
+          <td><code>select_nodes(x, degree >= 3)</code></td>
+        </tr>
+        <tr>
+          <td>By name</td>
+          <td><code>name</code></td>
+          <td><code>select_nodes(x, name = c("A", "B"))</code></td>
+        </tr>
+        <tr>
+          <td>By index</td>
+          <td><code>index</code></td>
+          <td><code>select_nodes(x, index = c(1, 3, 5))</code></td>
+        </tr>
+        <tr>
+          <td>Top N</td>
+          <td><code>top</code>, <code>by</code></td>
+          <td><code>select_nodes(x, top = 10, by = "pagerank")</code></td>
+        </tr>
+        <tr>
+          <td>Neighborhood</td>
+          <td><code>neighbors_of</code>, <code>order</code></td>
+          <td><code>select_nodes(x, neighbors_of = "A", order = 2)</code></td>
+        </tr>
+        <tr>
+          <td>Component</td>
+          <td><code>component</code></td>
+          <td><code>select_nodes(x, component = "largest")</code></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Mode 1: Expression Filtering (Lazy)</h3>
+    <pre><span class="comment"># Only computes degree - fast!</span>
+select_nodes(net, degree >= <span class="number">3</span>)
+
+<span class="comment"># Only computes pagerank</span>
+select_nodes(net, pagerank > <span class="number">0.1</span>)
+
+<span class="comment"># Computes both degree and betweenness</span>
+select_nodes(net, degree >= <span class="number">3</span> & betweenness > <span class="number">0</span>)</pre>
+
+    <h3>Mode 2: By Name</h3>
+    <pre><span class="comment"># Select specific nodes by label</span>
+select_nodes(net, name = c(<span class="string">"Alice"</span>, <span class="string">"Bob"</span>, <span class="string">"Charlie"</span>))
+
+<span class="comment"># Equivalent to (but faster than):</span>
+filter_nodes(net, label %in% c(<span class="string">"Alice"</span>, <span class="string">"Bob"</span>, <span class="string">"Charlie"</span>))</pre>
+
+    <h3>Mode 3: By Index</h3>
+    <pre><span class="comment"># Select nodes 1, 3, and 5</span>
+select_nodes(net, index = c(<span class="number">1</span>, <span class="number">3</span>, <span class="number">5</span>))
+
+<span class="comment"># First 10 nodes</span>
+select_nodes(net, index = <span class="number">1</span>:<span class="number">10</span>)</pre>
+
+    <h3>Mode 4: Top N by Centrality</h3>
+    <pre><span class="comment"># Top 10 by degree (default)</span>
+select_nodes(net, top = <span class="number">10</span>)
+
+<span class="comment"># Top 5 by PageRank</span>
+select_nodes(net, top = <span class="number">5</span>, by = <span class="string">"pagerank"</span>)
+
+<span class="comment"># Top 10 by betweenness</span>
+select_nodes(net, top = <span class="number">10</span>, by = <span class="string">"betweenness"</span>)
+
+<span class="comment"># Available measures for 'by':</span>
+<span class="comment"># degree, indegree, outdegree, strength, instrength, outstrength,</span>
+<span class="comment"># betweenness, closeness, eigenvector, pagerank, hub, authority, coreness</span></pre>
+
+    <h3>Mode 5: Neighborhood (Ego Network)</h3>
+    <pre><span class="comment"># Direct neighbors of node "A" (includes A itself)</span>
+select_nodes(net, neighbors_of = <span class="string">"A"</span>)
+
+<span class="comment"># 2-hop neighborhood</span>
+select_nodes(net, neighbors_of = <span class="string">"A"</span>, order = <span class="number">2</span>)
+
+<span class="comment"># Neighborhood of multiple nodes</span>
+select_nodes(net, neighbors_of = c(<span class="string">"A"</span>, <span class="string">"B"</span>), order = <span class="number">1</span>)
+
+<span class="comment"># By index instead of name</span>
+select_nodes(net, neighbors_of = <span class="number">1</span>, order = <span class="number">2</span>)</pre>
+
+    <h3>Mode 6: Component Selection</h3>
+    <pre><span class="comment"># Largest connected component</span>
+select_nodes(net, component = <span class="string">"largest"</span>)
+
+<span class="comment"># Component containing node "A"</span>
+select_nodes(net, component = <span class="string">"A"</span>)
+
+<span class="comment"># Component by ID (from igraph::components)</span>
+select_nodes(net, component = <span class="number">2</span>)</pre>
+  </section>
+
+  <!-- Global Context Variables -->
+  <section class="section" id="global-context">
+    <h2>Global Context Variables</h2>
+    <p>
+      These variables provide structural information about each node's position in the network.
+      They are computed lazily - only when referenced in an expression.
+    </p>
+
+    <table class="func-table">
+      <thead>
+        <tr>
+          <th>Variable</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>component</code></td>
+          <td>Integer</td>
+          <td>Component membership ID (from igraph::components)</td>
+        </tr>
+        <tr>
+          <td><code>component_size</code></td>
+          <td>Integer</td>
+          <td>Number of nodes in the node's component</td>
+        </tr>
+        <tr>
+          <td><code>is_largest_component</code></td>
+          <td>Logical</td>
+          <td>TRUE if node is in the largest connected component</td>
+        </tr>
+        <tr>
+          <td><code>neighborhood_size</code></td>
+          <td>Integer</td>
+          <td>Number of direct neighbors (same as degree)</td>
+        </tr>
+        <tr>
+          <td><code>k_core</code></td>
+          <td>Integer</td>
+          <td>K-core membership (coreness value)</td>
+        </tr>
+        <tr>
+          <td><code>is_articulation</code></td>
+          <td>Logical</td>
+          <td>TRUE if node is an articulation point (cut vertex)</td>
+        </tr>
+        <tr>
+          <td><code>is_bridge_endpoint</code></td>
+          <td>Logical</td>
+          <td>TRUE if node is incident to a bridge edge</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Examples</h3>
+    <pre><span class="comment"># Nodes in the largest connected component</span>
+select_nodes(net, is_largest_component)
+
+<span class="comment"># Articulation points (critical nodes)</span>
+select_nodes(net, is_articulation)
+
+<span class="comment"># Nodes at bridge endpoints</span>
+select_nodes(net, is_bridge_endpoint)
+
+<span class="comment"># Nodes in 3-core or higher (densely connected)</span>
+select_nodes(net, k_core >= <span class="number">3</span>)
+
+<span class="comment"># Large components only</span>
+select_nodes(net, component_size >= <span class="number">10</span>)
+
+<span class="comment"># Combine with centrality</span>
+select_nodes(net, is_articulation & degree >= <span class="number">5</span>)
+
+<span class="comment"># High-degree nodes in the largest component</span>
+select_nodes(net, is_largest_component & degree >= <span class="number">3</span>)</pre>
+
+    <div class="info">
+      <div class="info-title">What are Articulation Points?</div>
+      <p>
+        An <strong>articulation point</strong> (or cut vertex) is a node whose removal
+        would disconnect the graph. These are critical nodes for network connectivity.
+      </p>
+    </div>
+
+    <div class="info">
+      <div class="info-title">What are Bridge Edges?</div>
+      <p>
+        A <strong>bridge</strong> is an edge whose removal would disconnect the graph.
+        <code>is_bridge_endpoint</code> identifies nodes at the ends of these critical edges.
+      </p>
+    </div>
+  </section>
+
+  <!-- Convenience Functions -->
+  <section class="section" id="convenience">
+    <h2>Convenience Functions</h2>
+    <p>Three helper functions for common selection patterns:</p>
+
+    <div class="three-col">
+      <div>
+        <h3>select_neighbors()</h3>
+        <pre>select_neighbors(
+  x,
+  of,
+  order = <span class="number">1</span>,
+  ...
+)</pre>
+        <p>Extract ego network around focal nodes.</p>
+      </div>
+      <div>
+        <h3>select_component()</h3>
+        <pre>select_component(
+  x,
+  which = <span class="string">"largest"</span>,
+  ...
+)</pre>
+        <p>Extract a connected component.</p>
+      </div>
+      <div>
+        <h3>select_top()</h3>
+        <pre>select_top(
+  x,
+  n,
+  by = <span class="string">"degree"</span>,
+  ...
+)</pre>
+        <p>Select top N nodes by centrality.</p>
+      </div>
+    </div>
+
+    <h3>Examples</h3>
+    <pre><span class="comment"># Ego network of "Hub" with 2-hop radius</span>
+select_neighbors(net, of = <span class="string">"Hub"</span>, order = <span class="number">2</span>)
+
+<span class="comment"># Largest connected component</span>
+select_component(net, which = <span class="string">"largest"</span>)
+
+<span class="comment"># Component containing "A"</span>
+select_component(net, which = <span class="string">"A"</span>)
+
+<span class="comment"># Top 10 by eigenvector centrality</span>
+select_top(net, n = <span class="number">10</span>, by = <span class="string">"eigenvector"</span>)
+
+<span class="comment"># Top 5 by PageRank, then filter by degree</span>
+select_top(net, n = <span class="number">5</span>, by = <span class="string">"pagerank"</span>, degree >= <span class="number">3</span>)</pre>
+  </section>
+
+  <!-- Combining Modes -->
+  <section class="section" id="combining">
+    <h2>Combining Modes (AND Logic)</h2>
+    <p>
+      All selection modes combine with <strong>AND logic</strong> (intersection).
+      A node must satisfy ALL specified criteria to be selected.
+    </p>
+
+    <pre><span class="comment"># Top 10 by PageRank WITHIN the largest component</span>
+select_nodes(net, component = <span class="string">"largest"</span>, top = <span class="number">10</span>, by = <span class="string">"pagerank"</span>)
+
+<span class="comment"># Neighbors of "A" that also have high degree</span>
+select_nodes(net, neighbors_of = <span class="string">"A"</span>, degree >= <span class="number">5</span>)
+
+<span class="comment"># Top 5 among specific named nodes</span>
+select_nodes(net, name = c(<span class="string">"A"</span>, <span class="string">"B"</span>, <span class="string">"C"</span>, <span class="string">"D"</span>, <span class="string">"E"</span>), top = <span class="number">3</span>)
+
+<span class="comment"># Articulation points in the largest component</span>
+select_nodes(net, component = <span class="string">"largest"</span>, is_articulation)
+
+<span class="comment"># High-degree nodes in 2-hop neighborhood of "Hub"</span>
+select_nodes(net, neighbors_of = <span class="string">"Hub"</span>, order = <span class="number">2</span>, degree >= <span class="number">4</span>)</pre>
+
+    <div class="warning">
+      <div class="warning-title">Order of Operations</div>
+      <p>
+        Modes are applied in this order: name, index, component, neighbors_of, top, expressions.
+        The <code>top</code> selection is applied to the nodes remaining after other filters.
+      </p>
+    </div>
+  </section>
+
+  <!-- Performance -->
+  <section class="section" id="performance">
+    <h2>Performance</h2>
+    <p>
+      <code>select_nodes()</code> uses lazy computation - it only calculates centrality
+      measures that are actually referenced in your query. This provides significant
+      speedup for simple queries.
+    </p>
+
+    <h3>Benchmark: 500-node Network</h3>
+    <p>Filtering by <code>degree >= 10</code> (3 iterations):</p>
+
+    <div style="margin: 1rem 0;">
+      <p><code>filter_nodes()</code> - computes ALL centralities:</p>
+      <div class="perf-bar">
+        <div class="perf-bar-fill" style="width: 100%;">0.80s</div>
+      </div>
+    </div>
+
+    <div style="margin: 1rem 0;">
+      <p><code>select_nodes()</code> - computes only degree:</p>
+      <div class="perf-bar">
+        <div class="perf-bar-fill" style="width: 25%;">0.20s (4x faster)</div>
+      </div>
+    </div>
+
+    <div class="tip">
+      <div class="tip-title">Performance Tips</div>
+      <ul>
+        <li>Use <code>select_nodes()</code> for large networks (500+ nodes)</li>
+        <li>Prefer simple centrality measures (<code>degree</code>, <code>strength</code>) when possible</li>
+        <li>Use <code>top</code> parameter instead of sorting and filtering manually</li>
+        <li>Use <code>name</code> or <code>index</code> parameters for direct selection</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Complete Examples -->
+  <section class="section" id="examples">
+    <h2>Complete Examples</h2>
+
+    <h3>Example 1: Network Core Extraction</h3>
+    <pre><span class="comment"># Extract the densely connected core of a network</span>
+core <- net |>
+  select_nodes(component = <span class="string">"largest"</span>) |>
+  select_nodes(k_core >= <span class="number">3</span>) |>
+  select_nodes(degree >= <span class="number">5</span>)
+
+splot(core)</pre>
+
+    <h3>Example 2: Ego Network Analysis</h3>
+    <pre><span class="comment"># Analyze the neighborhood around key nodes</span>
+ego_net <- select_neighbors(net, of = c(<span class="string">"CEO"</span>, <span class="string">"CTO"</span>), order = <span class="number">2</span>)
+
+<span class="comment"># Find brokers (articulation points) in the ego network</span>
+brokers <- select_nodes(ego_net, is_articulation)
+
+splot(ego_net)
+splot(brokers)</pre>
+
+    <h3>Example 3: Influence Analysis</h3>
+    <pre><span class="comment"># Top influencers by different measures</span>
+top_degree <- select_top(net, n = <span class="number">10</span>, by = <span class="string">"degree"</span>)
+top_pagerank <- select_top(net, n = <span class="number">10</span>, by = <span class="string">"pagerank"</span>)
+top_between <- select_top(net, n = <span class="number">10</span>, by = <span class="string">"betweenness"</span>)
+
+<span class="comment"># Compare the sets</span>
+cat(<span class="string">"Top by degree:"</span>, get_labels(top_degree), <span class="string">"\n"</span>)
+cat(<span class="string">"Top by PageRank:"</span>, get_labels(top_pagerank), <span class="string">"\n"</span>)
+cat(<span class="string">"Top by betweenness:"</span>, get_labels(top_between), <span class="string">"\n"</span>)</pre>
+
+    <h3>Example 4: Critical Node Identification</h3>
+    <pre><span class="comment"># Find critical nodes for network resilience</span>
+critical <- select_nodes(net,
+  is_articulation | is_bridge_endpoint,
+  degree >= <span class="number">3</span>
+)
+
+<span class="comment"># Visualize with highlighting</span>
+splot(net)
+splot(critical)</pre>
+
+    <h3>Example 5: Disconnected Network Analysis</h3>
+    <pre><span class="comment"># Analyze each component separately</span>
+largest <- select_component(net, which = <span class="string">"largest"</span>)
+second <- select_component(net, which = <span class="number">2</span>)
+
+<span class="comment"># Compare structure</span>
+cat(<span class="string">"Largest component:"</span>, n_nodes(largest), <span class="string">"nodes\n"</span>)
+cat(<span class="string">"Second component:"</span>, n_nodes(second), <span class="string">"nodes\n"</span>)</pre>
+
+    <h3>Example 6: TNA Workflow</h3>
+    <pre><span class="comment"># Extract significant states from TNA model</span>
+tna_net <- as_cograph(tna_model)
+
+<span class="comment"># High-traffic states with significant initial probability</span>
+key_states <- select_nodes(tna_net,
+  inits > <span class="number">0.05</span>,
+  strength > <span class="number">0.3</span>
+)
+
+splot(key_states)</pre>
+  </section>
+
+  <!-- Negative Weights -->
+  <section class="section" id="negative-weights">
+    <h2>Handling Negative Weights</h2>
+    <p>
+      Some centrality measures (betweenness, closeness) cannot be computed with negative
+      edge weights. <code>select_nodes()</code> handles this gracefully:
+    </p>
+
+    <pre><span class="comment"># Network with negative weights</span>
+mat <- matrix(c( <span class="number">0</span>,  <span class="number">0.5</span>, <span class="number">-0.3</span>,
+                <span class="number">0.5</span>,  <span class="number">0</span>,  <span class="number">0.4</span>,
+               <span class="number">-0.3</span>, <span class="number">0.4</span>,  <span class="number">0</span>), <span class="number">3</span>, <span class="number">3</span>)
+
+<span class="comment"># This will warn and return NA for betweenness</span>
+select_nodes(mat, betweenness > <span class="number">0</span>)
+<span class="comment">#> Warning: Betweenness cannot be computed with negative weights. Returning NA.</span>
+
+<span class="comment"># Degree works fine (doesn't use weights for distance)</span>
+select_nodes(mat, degree >= <span class="number">2</span>)
+<span class="comment">#> Works normally</span></pre>
+
+    <div class="warning">
+      <div class="warning-title">Affected Measures</div>
+      <p>
+        With negative weights, <code>betweenness</code> and <code>closeness</code>
+        will return NA with a warning. Other measures work normally.
+      </p>
+    </div>
+  </section>
+
+</div>
+
+</body>
+</html>

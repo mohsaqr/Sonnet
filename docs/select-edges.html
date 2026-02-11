@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>select_edges() - Advanced Edge Selection - cograph Package</title>
+  <style>
+    :root {
+      --primary: #7c3aed;
+      --primary-dark: #6d28d9;
+      --secondary: #64748b;
+      --success: #16a34a;
+      --warning: #ea580c;
+      --danger: #dc2626;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --code-bg: #1e293b;
+      --code-text: #e2e8f0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 0;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #059669 0%, #047857 100%);
+      color: white;
+      padding: 3rem 2rem;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .header .subtitle {
+      font-size: 1.2rem;
+      opacity: 0.9;
+    }
+
+    .header .version {
+      display: inline-block;
+      background: rgba(255,255,255,0.2);
+      padding: 0.25rem 0.75rem;
+      border-radius: 1rem;
+      margin-top: 1rem;
+      font-size: 0.9rem;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .toc {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 1.5rem 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .toc h2 {
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+      color: var(--secondary);
+    }
+
+    .toc ul {
+      list-style: none;
+      columns: 2;
+      gap: 2rem;
+    }
+
+    .toc li {
+      margin-bottom: 0.5rem;
+    }
+
+    .toc a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    .toc a:hover {
+      text-decoration: underline;
+    }
+
+    .section {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .section h2 {
+      color: #059669;
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .section h3 {
+      color: var(--text);
+      font-size: 1.2rem;
+      margin: 1.5rem 0 0.75rem 0;
+    }
+
+    .section p {
+      margin-bottom: 1rem;
+      color: var(--text);
+    }
+
+    pre {
+      background: var(--code-bg);
+      color: var(--code-text);
+      padding: 1.25rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1rem 0;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    code {
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 0.9em;
+    }
+
+    p code, li code, td code {
+      background: #f1f5f9;
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      color: #047857;
+    }
+
+    .func-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+    }
+
+    .func-table th,
+    .func-table td {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .func-table th {
+      background: var(--bg);
+      font-weight: 600;
+      color: var(--secondary);
+    }
+
+    .func-table tr:hover {
+      background: var(--bg);
+    }
+
+    .func-name {
+      font-family: monospace;
+      color: #059669;
+      font-weight: 600;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .badge-primary {
+      background: #d1fae5;
+      color: #047857;
+    }
+
+    .badge-success {
+      background: #dcfce7;
+      color: var(--success);
+    }
+
+    .badge-warning {
+      background: #ffedd5;
+      color: var(--warning);
+    }
+
+    .badge-new {
+      background: #dbeafe;
+      color: #2563eb;
+    }
+
+    .tip {
+      background: #f0fdf4;
+      border-left: 4px solid var(--success);
+      padding: 1rem 1.25rem;
+      margin: 1rem 0;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .tip-title {
+      font-weight: 600;
+      color: var(--success);
+      margin-bottom: 0.25rem;
+    }
+
+    .warning {
+      background: #fffbeb;
+      border-left: 4px solid var(--warning);
+      padding: 1rem 1.25rem;
+      margin: 1rem 0;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .warning-title {
+      font-weight: 600;
+      color: var(--warning);
+      margin-bottom: 0.25rem;
+    }
+
+    .info {
+      background: #eff6ff;
+      border-left: 4px solid #3b82f6;
+      padding: 1rem 1.25rem;
+      margin: 1rem 0;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .info-title {
+      font-weight: 600;
+      color: #3b82f6;
+      margin-bottom: 0.25rem;
+    }
+
+    ul, ol {
+      margin: 1rem 0;
+      padding-left: 1.5rem;
+    }
+
+    li {
+      margin-bottom: 0.5rem;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    .three-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    .four-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 1rem;
+    }
+
+    @media (max-width: 768px) {
+      .two-col, .three-col, .four-col {
+        grid-template-columns: 1fr;
+      }
+      .toc ul {
+        columns: 1;
+      }
+    }
+
+    .comment {
+      color: #6b7280;
+    }
+
+    .string {
+      color: #10b981;
+    }
+
+    .keyword {
+      color: #f472b6;
+    }
+
+    .number {
+      color: #fbbf24;
+    }
+
+    .comparison-table td:first-child {
+      font-weight: 600;
+    }
+
+    .metric-card {
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 1rem;
+      border: 1px solid var(--border);
+    }
+
+    .metric-card h4 {
+      color: #059669;
+      margin-bottom: 0.5rem;
+      font-size: 0.95rem;
+    }
+
+    .metric-card p {
+      font-size: 0.9rem;
+      margin: 0;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>select_edges()</h1>
+  <div class="subtitle">Advanced Edge Selection with Lazy Computation</div>
+  <div class="version">cograph 1.5.2</div>
+</div>
+
+<div class="container">
+
+  <nav class="toc">
+    <h2>Contents</h2>
+    <ul>
+      <li><a href="#overview">Overview</a></li>
+      <li><a href="#vs-filter">select_edges vs filter_edges</a></li>
+      <li><a href="#selection-modes">Selection Modes</a></li>
+      <li><a href="#lazy-metrics">Lazy Edge Metrics</a></li>
+      <li><a href="#convenience">Convenience Functions</a></li>
+      <li><a href="#combining">Combining Modes (AND Logic)</a></li>
+      <li><a href="#community">Community-Aware Selection</a></li>
+      <li><a href="#examples">Complete Examples</a></li>
+    </ul>
+  </nav>
+
+  <!-- Overview -->
+  <section class="section" id="overview">
+    <h2>Overview</h2>
+    <p>
+      <code>select_edges()</code> is an advanced edge selection function that improves upon
+      <code>filter_edges()</code> with lazy computation (only computes metrics actually referenced),
+      multiple selection modes, and structural awareness (bridges, communities, reciprocity).
+    </p>
+
+    <h3>Function Signature</h3>
+    <pre>select_edges(
+  x,
+  ...,                           <span class="comment"># dplyr-style filter expressions</span>
+  top = NULL,                    <span class="comment"># Select top N edges</span>
+  by = <span class="string">"weight"</span>,                 <span class="comment"># Metric for top selection</span>
+  involving = NULL,              <span class="comment"># Edges involving these nodes</span>
+  between = NULL,                <span class="comment"># Edges between two node sets</span>
+  bridges_only = FALSE,          <span class="comment"># Select only bridge edges</span>
+  mutual_only = FALSE,           <span class="comment"># Select only reciprocated edges</span>
+  community = <span class="string">"louvain"</span>,         <span class="comment"># Method for same_community</span>
+  .keep_isolates = FALSE,
+  keep_format = FALSE,
+  directed = NULL
+)</pre>
+
+    <div class="tip">
+      <div class="tip-title">Key Features</div>
+      <ul>
+        <li><strong>Lazy computation</strong> - Only computes edge metrics actually referenced</li>
+        <li><strong>Multiple selection modes</strong> - By weight, involvement, between sets, bridges, mutual</li>
+        <li><strong>Structural awareness</strong> - Bridge detection, community membership, reciprocity</li>
+        <li><strong>AND logic</strong> - All modes combine with intersection</li>
+        <li><strong>Endpoint metrics</strong> - Access degree/strength of edge endpoints</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Comparison -->
+  <section class="section" id="vs-filter">
+    <h2>select_edges() vs filter_edges()</h2>
+
+    <table class="func-table comparison-table">
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th>filter_edges()</th>
+          <th>select_edges()</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Expression filtering</td>
+          <td>Yes</td>
+          <td>Yes</td>
+        </tr>
+        <tr>
+          <td>Metric computation</td>
+          <td>Uses existing columns only</td>
+          <td><span class="badge badge-success">Lazy (computes on demand)</span></td>
+        </tr>
+        <tr>
+          <td>Top N selection</td>
+          <td>Manual via expression</td>
+          <td><span class="badge badge-new">Built-in parameter</span></td>
+        </tr>
+        <tr>
+          <td>Edges involving nodes</td>
+          <td>Manual via from/to</td>
+          <td><span class="badge badge-new">Built-in parameter</span></td>
+        </tr>
+        <tr>
+          <td>Edges between sets</td>
+          <td>Complex expression</td>
+          <td><span class="badge badge-new">Built-in parameter</span></td>
+        </tr>
+        <tr>
+          <td>Bridge detection</td>
+          <td>Not available</td>
+          <td><span class="badge badge-new">Built-in</span></td>
+        </tr>
+        <tr>
+          <td>Mutual edge detection</td>
+          <td>Not available</td>
+          <td><span class="badge badge-new">Built-in</span></td>
+        </tr>
+        <tr>
+          <td>Community awareness</td>
+          <td>Not available</td>
+          <td><span class="badge badge-new">same_community variable</span></td>
+        </tr>
+        <tr>
+          <td>Endpoint metrics</td>
+          <td>Not available</td>
+          <td><span class="badge badge-new">from_degree, to_degree, etc.</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>When to Use Which</h3>
+    <div class="two-col">
+      <div>
+        <p><strong>Use <code>filter_edges()</code> when:</strong></p>
+        <ul>
+          <li>Simple weight-based filtering</li>
+          <li>Filtering by existing edge columns</li>
+          <li>Backward compatibility needed</li>
+        </ul>
+      </div>
+      <div>
+        <p><strong>Use <code>select_edges()</code> when:</strong></p>
+        <ul>
+          <li>Selecting edges involving specific nodes</li>
+          <li>Selecting edges between node groups</li>
+          <li>Finding bridge edges</li>
+          <li>Need endpoint metrics (from_degree, etc.)</li>
+          <li>Community-aware filtering</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Selection Modes -->
+  <section class="section" id="selection-modes">
+    <h2>Selection Modes</h2>
+
+    <table class="func-table">
+      <thead>
+        <tr>
+          <th>Mode</th>
+          <th>Parameter</th>
+          <th>Example</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Expression</td>
+          <td><code>...</code></td>
+          <td><code>select_edges(x, weight > 0.5)</code></td>
+        </tr>
+        <tr>
+          <td>Top N</td>
+          <td><code>top</code>, <code>by</code></td>
+          <td><code>select_edges(x, top = 10, by = "weight")</code></td>
+        </tr>
+        <tr>
+          <td>Involving nodes</td>
+          <td><code>involving</code></td>
+          <td><code>select_edges(x, involving = "A")</code></td>
+        </tr>
+        <tr>
+          <td>Between sets</td>
+          <td><code>between</code></td>
+          <td><code>select_edges(x, between = list(c("A","B"), c("C","D")))</code></td>
+        </tr>
+        <tr>
+          <td>Bridges only</td>
+          <td><code>bridges_only</code></td>
+          <td><code>select_edges(x, bridges_only = TRUE)</code></td>
+        </tr>
+        <tr>
+          <td>Mutual only</td>
+          <td><code>mutual_only</code></td>
+          <td><code>select_edges(x, mutual_only = TRUE)</code></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Mode 1: Expression Filtering</h3>
+    <pre><span class="comment"># Filter by weight</span>
+select_edges(net, weight > <span class="number">0.5</span>)
+
+<span class="comment"># Filter by absolute weight (negative edges)</span>
+select_edges(net, abs_weight > <span class="number">0.3</span>)
+
+<span class="comment"># Filter by endpoint properties</span>
+select_edges(net, from_degree >= <span class="number">3</span> | to_degree >= <span class="number">3</span>)
+
+<span class="comment"># Filter by edge betweenness</span>
+select_edges(net, edge_betweenness > <span class="number">10</span>)</pre>
+
+    <h3>Mode 2: Top N Edges</h3>
+    <pre><span class="comment"># Top 10 edges by weight (default)</span>
+select_edges(net, top = <span class="number">10</span>)
+
+<span class="comment"># Top 5 by absolute weight</span>
+select_edges(net, top = <span class="number">5</span>, by = <span class="string">"abs_weight"</span>)
+
+<span class="comment"># Top 10 by edge betweenness (most critical for connectivity)</span>
+select_edges(net, top = <span class="number">10</span>, by = <span class="string">"edge_betweenness"</span>)</pre>
+
+    <h3>Mode 3: Edges Involving Nodes</h3>
+    <pre><span class="comment"># Edges where A is an endpoint</span>
+select_edges(net, involving = <span class="string">"A"</span>)
+
+<span class="comment"># Edges involving any of these nodes</span>
+select_edges(net, involving = c(<span class="string">"A"</span>, <span class="string">"B"</span>, <span class="string">"C"</span>))
+
+<span class="comment"># By node index</span>
+select_edges(net, involving = c(<span class="number">1</span>, <span class="number">3</span>, <span class="number">5</span>))</pre>
+
+    <h3>Mode 4: Edges Between Node Sets</h3>
+    <pre><span class="comment"># Edges connecting group 1 to group 2</span>
+select_edges(net, between = list(
+  c(<span class="string">"A"</span>, <span class="string">"B"</span>),     <span class="comment"># Set 1</span>
+  c(<span class="string">"C"</span>, <span class="string">"D"</span>)      <span class="comment"># Set 2</span>
+))
+
+<span class="comment"># Edges between communities</span>
+select_edges(net, between = list(
+  c(<span class="string">"Hub1"</span>, <span class="string">"Node1"</span>, <span class="string">"Node2"</span>),
+  c(<span class="string">"Hub2"</span>, <span class="string">"Node3"</span>, <span class="string">"Node4"</span>)
+))</pre>
+
+    <h3>Mode 5: Bridge Edges</h3>
+    <pre><span class="comment"># Select only bridge edges (critical for connectivity)</span>
+select_edges(net, bridges_only = TRUE)
+
+<span class="comment"># Alternative: use is_bridge in expression</span>
+select_edges(net, is_bridge)
+
+<span class="comment"># Non-bridge edges (redundant connections)</span>
+select_edges(net, !is_bridge)</pre>
+
+    <div class="info">
+      <div class="info-title">What are Bridge Edges?</div>
+      <p>
+        A <strong>bridge</strong> is an edge whose removal would disconnect the graph
+        (or increase the number of connected components). These are critical edges
+        for network connectivity.
+      </p>
+    </div>
+
+    <h3>Mode 6: Mutual Edges (Directed Networks)</h3>
+    <pre><span class="comment"># Select only reciprocated edges (A→B and B→A both exist)</span>
+select_edges(net, mutual_only = TRUE, directed = TRUE)
+
+<span class="comment"># Alternative: use is_mutual in expression</span>
+select_edges(net, is_mutual, directed = TRUE)
+
+<span class="comment"># One-way edges only</span>
+select_edges(net, !is_mutual, directed = TRUE)</pre>
+  </section>
+
+  <!-- Lazy Edge Metrics -->
+  <section class="section" id="lazy-metrics">
+    <h2>Lazy Edge Metrics</h2>
+    <p>
+      These metrics are computed on-demand when referenced in expressions.
+      Only the metrics you actually use are computed, making queries efficient.
+    </p>
+
+    <div class="two-col">
+      <div>
+        <h3>Weight Metrics</h3>
+        <div class="metric-card">
+          <h4><code>weight</code></h4>
+          <p>Original edge weight (from edges dataframe)</p>
+        </div>
+        <div class="metric-card" style="margin-top: 0.5rem;">
+          <h4><code>abs_weight</code></h4>
+          <p>Absolute value of weight. Useful for networks with negative edges.</p>
+        </div>
+      </div>
+      <div>
+        <h3>Centrality Metrics</h3>
+        <div class="metric-card">
+          <h4><code>edge_betweenness</code></h4>
+          <p>Number of shortest paths passing through this edge. High values indicate critical edges.</p>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="margin-top: 1.5rem;">Endpoint Metrics</h3>
+    <div class="four-col">
+      <div class="metric-card">
+        <h4><code>from_degree</code></h4>
+        <p>Degree of source node</p>
+      </div>
+      <div class="metric-card">
+        <h4><code>to_degree</code></h4>
+        <p>Degree of target node</p>
+      </div>
+      <div class="metric-card">
+        <h4><code>from_strength</code></h4>
+        <p>Strength of source node</p>
+      </div>
+      <div class="metric-card">
+        <h4><code>to_strength</code></h4>
+        <p>Strength of target node</p>
+      </div>
+    </div>
+
+    <h3 style="margin-top: 1.5rem;">Structural Metrics</h3>
+    <div class="three-col">
+      <div class="metric-card">
+        <h4><code>is_bridge</code></h4>
+        <p>TRUE if removing this edge disconnects the graph</p>
+      </div>
+      <div class="metric-card">
+        <h4><code>is_mutual</code></h4>
+        <p>TRUE if reciprocal edge exists (directed networks)</p>
+      </div>
+      <div class="metric-card">
+        <h4><code>same_community</code></h4>
+        <p>TRUE if both endpoints are in the same community</p>
+      </div>
+    </div>
+
+    <h3 style="margin-top: 1.5rem;">Label Metrics</h3>
+    <div class="two-col">
+      <div class="metric-card">
+        <h4><code>from_label</code></h4>
+        <p>Label/name of source node</p>
+      </div>
+      <div class="metric-card">
+        <h4><code>to_label</code></h4>
+        <p>Label/name of target node</p>
+      </div>
+    </div>
+
+    <h3 style="margin-top: 1.5rem;">Usage Examples</h3>
+    <pre><span class="comment"># Edges connecting high-degree nodes</span>
+select_edges(net, from_degree >= <span class="number">5</span> & to_degree >= <span class="number">5</span>)
+
+<span class="comment"># Edges with high betweenness (bottlenecks)</span>
+select_edges(net, edge_betweenness > quantile(edge_betweenness, <span class="number">0.9</span>))
+
+<span class="comment"># Strong edges that are also bridges</span>
+select_edges(net, weight > <span class="number">0.5</span> & is_bridge)
+
+<span class="comment"># Within-community edges only</span>
+select_edges(net, same_community)
+
+<span class="comment"># Cross-community edges only</span>
+select_edges(net, !same_community)</pre>
+  </section>
+
+  <!-- Convenience Functions -->
+  <section class="section" id="convenience">
+    <h2>Convenience Functions</h2>
+    <p>Four helper functions for common edge selection patterns:</p>
+
+    <div class="two-col">
+      <div>
+        <h3>select_bridges()</h3>
+        <pre>select_bridges(x, ...)</pre>
+        <p>Select bridge edges (critical for connectivity).</p>
+        <pre><span class="comment"># All bridges</span>
+select_bridges(net)
+
+<span class="comment"># Strong bridges only</span>
+select_bridges(net, weight > <span class="number">0.5</span>)</pre>
+      </div>
+      <div>
+        <h3>select_top_edges()</h3>
+        <pre>select_top_edges(x, n, by = <span class="string">"weight"</span>)</pre>
+        <p>Select top N edges by a metric.</p>
+        <pre><span class="comment"># Top 10 by weight</span>
+select_top_edges(net, n = <span class="number">10</span>)
+
+<span class="comment"># Top 5 by betweenness</span>
+select_top_edges(net, n = <span class="number">5</span>, by = <span class="string">"edge_betweenness"</span>)</pre>
+      </div>
+    </div>
+
+    <div class="two-col" style="margin-top: 1.5rem;">
+      <div>
+        <h3>select_edges_involving()</h3>
+        <pre>select_edges_involving(x, nodes)</pre>
+        <p>Select edges where at least one endpoint matches.</p>
+        <pre><span class="comment"># Edges involving node A</span>
+select_edges_involving(net, nodes = <span class="string">"A"</span>)
+
+<span class="comment"># Edges involving any hub</span>
+select_edges_involving(net, nodes = c(<span class="string">"Hub1"</span>, <span class="string">"Hub2"</span>))</pre>
+      </div>
+      <div>
+        <h3>select_edges_between()</h3>
+        <pre>select_edges_between(x, set1, set2)</pre>
+        <p>Select edges connecting two node sets.</p>
+        <pre><span class="comment"># Edges between groups</span>
+select_edges_between(net,
+  set1 = c(<span class="string">"A"</span>, <span class="string">"B"</span>),
+  set2 = c(<span class="string">"C"</span>, <span class="string">"D"</span>)
+)</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- Combining Modes -->
+  <section class="section" id="combining">
+    <h2>Combining Modes (AND Logic)</h2>
+    <p>
+      All selection modes combine with <strong>AND logic</strong> (intersection).
+      An edge must satisfy ALL specified criteria to be selected.
+    </p>
+
+    <pre><span class="comment"># Top 5 edges AMONG those involving node A</span>
+select_edges(net, involving = <span class="string">"A"</span>, top = <span class="number">5</span>)
+
+<span class="comment"># Strong bridges only</span>
+select_edges(net, bridges_only = TRUE, weight > <span class="number">0.5</span>)
+
+<span class="comment"># Top 3 edges between two groups</span>
+select_edges(net,
+  between = list(c(<span class="string">"A"</span>, <span class="string">"B"</span>), c(<span class="string">"C"</span>, <span class="string">"D"</span>)),
+  top = <span class="number">3</span>
+)
+
+<span class="comment"># Mutual edges with high weight</span>
+select_edges(net, mutual_only = TRUE, weight > <span class="number">0.7</span>, directed = TRUE)
+
+<span class="comment"># Top bridges by edge betweenness</span>
+select_edges(net, bridges_only = TRUE, top = <span class="number">5</span>, by = <span class="string">"edge_betweenness"</span>)</pre>
+
+    <div class="warning">
+      <div class="warning-title">Order of Operations</div>
+      <p>
+        Modes are applied in this order: <code>involving</code> → <code>between</code> →
+        <code>bridges_only</code> → <code>mutual_only</code> → <code>top</code> → expressions.
+        The <code>top</code> selection is applied to edges remaining after other filters.
+      </p>
+    </div>
+  </section>
+
+  <!-- Community-Aware Selection -->
+  <section class="section" id="community">
+    <h2>Community-Aware Selection</h2>
+    <p>
+      The <code>same_community</code> metric allows filtering edges based on whether
+      their endpoints belong to the same detected community.
+    </p>
+
+    <h3>Within-Community Edges</h3>
+    <pre><span class="comment"># Edges where both nodes are in the same community</span>
+select_edges(net, same_community)
+
+<span class="comment"># Strong within-community edges</span>
+select_edges(net, same_community & weight > <span class="number">0.5</span>)</pre>
+
+    <h3>Cross-Community Edges</h3>
+    <pre><span class="comment"># Edges connecting different communities</span>
+select_edges(net, !same_community)
+
+<span class="comment"># These are often "bridge" edges between clusters</span>
+cross_community <- select_edges(net, !same_community)
+splot(cross_community)</pre>
+
+    <h3>Community Detection Method</h3>
+    <pre><span class="comment"># Default: Louvain</span>
+select_edges(net, same_community)
+
+<span class="comment"># Use different community detection</span>
+select_edges(net, same_community, community = <span class="string">"walktrap"</span>)
+select_edges(net, same_community, community = <span class="string">"fast_greedy"</span>)
+select_edges(net, same_community, community = <span class="string">"infomap"</span>)</pre>
+
+    <div class="tip">
+      <div class="tip-title">Use Case: Network Backbone</div>
+      <p>
+        Cross-community edges often form the "backbone" of a network - the
+        critical connections between clusters. Combining <code>!same_community</code>
+        with <code>is_bridge</code> identifies the most critical inter-cluster edges.
+      </p>
+      <pre style="margin-top: 0.5rem;">backbone <- select_edges(net, !same_community & is_bridge)</pre>
+    </div>
+  </section>
+
+  <!-- Complete Examples -->
+  <section class="section" id="examples">
+    <h2>Complete Examples</h2>
+
+    <h3>Example 1: Network Backbone Extraction</h3>
+    <pre><span class="comment"># Extract the structural backbone of a network</span>
+backbone <- net |>
+  select_edges(top = <span class="number">20</span>, by = <span class="string">"edge_betweenness"</span>) |>
+  select_edges(weight > <span class="number">0.3</span>)
+
+splot(backbone)</pre>
+
+    <h3>Example 2: Ego Network Edges</h3>
+    <pre><span class="comment"># Get all edges involving a focal node</span>
+ego_edges <- select_edges_involving(net, nodes = <span class="string">"CEO"</span>)
+
+<span class="comment"># Top 5 strongest connections of the CEO</span>
+top_connections <- select_edges(net, involving = <span class="string">"CEO"</span>, top = <span class="number">5</span>)
+
+splot(top_connections)</pre>
+
+    <h3>Example 3: Inter-Group Connections</h3>
+    <pre><span class="comment"># Define two groups</span>
+marketing <- c(<span class="string">"Alice"</span>, <span class="string">"Bob"</span>, <span class="string">"Carol"</span>)
+engineering <- c(<span class="string">"Dave"</span>, <span class="string">"Eve"</span>, <span class="string">"Frank"</span>)
+
+<span class="comment"># Find connections between departments</span>
+cross_dept <- select_edges_between(net, set1 = marketing, set2 = engineering)
+
+<span class="comment"># Strongest cross-department ties</span>
+strong_ties <- select_edges(net,
+  between = list(marketing, engineering),
+  top = <span class="number">3</span>
+)
+
+splot(strong_ties)</pre>
+
+    <h3>Example 4: Critical Edge Analysis</h3>
+    <pre><span class="comment"># Find bridges (edges critical for connectivity)</span>
+bridges <- select_bridges(net)
+cat(<span class="string">"Number of bridges:"</span>, n_edges(bridges), <span class="string">"\n"</span>)
+
+<span class="comment"># Rank bridges by weight</span>
+critical_bridges <- select_edges(net,
+  bridges_only = TRUE,
+  top = <span class="number">5</span>,
+  by = <span class="string">"weight"</span>
+)
+
+<span class="comment"># Visualize</span>
+splot(net)
+splot(critical_bridges)  <span class="comment"># Overlay or compare</span></pre>
+
+    <h3>Example 5: Reciprocity Analysis (Directed)</h3>
+    <pre><span class="comment"># Load directed network</span>
+directed_net <- as_cograph(mat, directed = TRUE)
+
+<span class="comment"># Mutual (reciprocated) relationships</span>
+mutual <- select_edges(directed_net, mutual_only = TRUE)
+cat(<span class="string">"Mutual edges:"</span>, n_edges(mutual), <span class="string">"\n"</span>)
+
+<span class="comment"># One-way relationships</span>
+one_way <- select_edges(directed_net, !is_mutual)
+cat(<span class="string">"One-way edges:"</span>, n_edges(one_way), <span class="string">"\n"</span>)
+
+<span class="comment"># Reciprocity ratio</span>
+reciprocity <- n_edges(mutual) / (n_edges(mutual) + n_edges(one_way))
+cat(<span class="string">"Reciprocity:"</span>, round(reciprocity, <span class="number">2</span>), <span class="string">"\n"</span>)</pre>
+
+    <h3>Example 6: Community Border Analysis</h3>
+    <pre><span class="comment"># Within-community edges (dense clusters)</span>
+within <- select_edges(net, same_community)
+
+<span class="comment"># Cross-community edges (inter-cluster bridges)</span>
+across <- select_edges(net, !same_community)
+
+cat(<span class="string">"Within-community:"</span>, n_edges(within), <span class="string">"\n"</span>)
+cat(<span class="string">"Cross-community:"</span>, n_edges(across), <span class="string">"\n"</span>)
+
+<span class="comment"># Strong cross-community ties (key bridges)</span>
+key_bridges <- select_edges(net, !same_community & weight > <span class="number">0.5</span>)
+splot(key_bridges)</pre>
+
+    <h3>Example 7: Chaining with select_nodes</h3>
+    <pre><span class="comment"># Combined node and edge filtering</span>
+result <- net |>
+  select_edges(weight > <span class="number">0.3</span>) |>           <span class="comment"># Keep strong edges</span>
+  select_nodes(degree >= <span class="number">2</span>) |>           <span class="comment"># Keep connected nodes</span>
+  select_edges(top = <span class="number">10</span>)                  <span class="comment"># Top 10 remaining</span>
+
+splot(result)</pre>
+
+    <h3>Example 8: TNA Transition Analysis</h3>
+    <pre><span class="comment"># Load TNA model</span>
+tna_net <- as_cograph(tna_model)
+
+<span class="comment"># Strong transitions only</span>
+strong_trans <- select_edges(tna_net, weight > <span class="number">0.1</span>)
+
+<span class="comment"># Top transitions from a specific state</span>
+from_state <- select_edges(tna_net,
+  involving = <span class="string">"Engaged"</span>,
+  top = <span class="number">3</span>
+)
+
+splot(from_state)</pre>
+  </section>
+
+  <!-- Edge Cases -->
+  <section class="section" id="edge-cases">
+    <h2>Edge Cases &amp; Warnings</h2>
+
+    <h3>Empty Results</h3>
+    <pre><span class="comment"># When no edges match, a warning is shown</span>
+select_edges(net, weight > <span class="number">100</span>)
+<span class="comment">#> Warning: No edges match the selection criteria.</span></pre>
+
+    <h3>Non-Existent Nodes</h3>
+    <pre><span class="comment"># Gracefully handles missing nodes</span>
+select_edges(net, involving = <span class="string">"NonExistent"</span>)
+<span class="comment">#> Warning: No nodes found matching: NonExistent</span></pre>
+
+    <h3>Keep Isolates</h3>
+    <pre><span class="comment"># By default, nodes with no remaining edges are removed</span>
+select_edges(net, involving = <span class="string">"A"</span>)
+<span class="comment">#> Returns subgraph with only connected nodes</span>
+
+<span class="comment"># Keep all original nodes (isolates become disconnected)</span>
+select_edges(net, involving = <span class="string">"A"</span>, .keep_isolates = TRUE)
+<span class="comment">#> Keeps all nodes, some may have no edges</span></pre>
+
+    <h3>Directed vs Undirected</h3>
+    <pre><span class="comment"># In undirected networks, all edges are "mutual"</span>
+select_edges(undirected_net, mutual_only = TRUE)
+<span class="comment">#> Returns all edges</span>
+
+<span class="comment"># is_mutual is meaningful only for directed networks</span>
+select_edges(directed_net, is_mutual, directed = TRUE)</pre>
+  </section>
+
+</div>
+
+</body>
+</html>
