@@ -708,7 +708,7 @@ mem <- <span class="syntax-function">membership</span>(comm)
 
       <div class="algo-card">
         <div class="algo-header">
-          <h4>community_label_prop()</h4>
+          <h4>community_label_propagation()</h4>
           <span class="badge badge-fast">Very Fast</span>
         </div>
         <div class="algo-body">
@@ -719,7 +719,7 @@ mem <- <span class="syntax-function">membership</span>(comm)
           </div>
           <p>Each node adopts the most frequent label among neighbors. Very fast but results can vary between runs.</p>
 
-          <pre><code><span class="syntax-function">community_label_prop</span>(x,
+          <pre><code><span class="syntax-function">community_label_propagation</span>(x,
   <span class="syntax-param">weights</span> = <span class="syntax-keyword">NULL</span>,
   <span class="syntax-param">mode</span> = <span class="syntax-string">"out"</span>,        <span class="syntax-comment"># "out", "in", or "all"</span>
   <span class="syntax-param">initial</span> = <span class="syntax-keyword">NULL</span>,       <span class="syntax-comment"># Initial labels</span>
@@ -759,7 +759,7 @@ mem <- <span class="syntax-function">membership</span>(comm)
 
       <div class="algo-card">
         <div class="algo-header">
-          <h4>community_leading_eigen()</h4>
+          <h4>community_leading_eigenvector()</h4>
           <span class="badge badge-medium">Spectral</span>
         </div>
         <div class="algo-body">
@@ -770,7 +770,7 @@ mem <- <span class="syntax-function">membership</span>(comm)
           </div>
           <p>Uses the leading eigenvector of the modularity matrix. Divisive hierarchical algorithm.</p>
 
-          <pre><code><span class="syntax-function">community_leading_eigen</span>(x,
+          <pre><code><span class="syntax-function">community_leading_eigenvector</span>(x,
   <span class="syntax-param">weights</span> = <span class="syntax-keyword">NULL</span>,
   <span class="syntax-param">steps</span> = <span class="syntax-number">-1</span>,           <span class="syntax-comment"># Max splits (-1 = until Q decreases)</span>
   <span class="syntax-param">start</span> = <span class="syntax-keyword">NULL</span>,          <span class="syntax-comment"># Starting partition</span>
@@ -957,7 +957,7 @@ initial[unknown] <- <span class="syntax-function">seq</span>(<span class="syntax
 fixed <- !<span class="syntax-function">is.na</span>(<span class="syntax-function">c</span>(<span class="syntax-number">1</span>, <span class="syntax-keyword">NA</span>, <span class="syntax-keyword">NA</span>, ...))  <span class="syntax-comment"># Original NA positions</span>
 
 <span class="syntax-comment"># Run with seeds</span>
-comm <- <span class="syntax-function">community_label_prop</span>(g,
+comm <- <span class="syntax-function">community_label_propagation</span>(g,
   <span class="syntax-param">initial</span> = initial,
   <span class="syntax-param">fixed</span> = fixed
 )</code></pre>
@@ -1278,7 +1278,7 @@ best <- results[[<span class="syntax-function">which.max</span>(<span class="syn
           </tr>
           <tr>
             <td>Very slow</td>
-            <td>Switch to faster algorithm (label_prop, louvain)</td>
+            <td>Switch to faster algorithm (label_propagation, louvain)</td>
           </tr>
         </tbody>
       </table>

@@ -441,7 +441,7 @@
         </div>
         <div class="feature-card">
           <h4><span class="icon">+</span> 11 Community Detection Algorithms</h4>
-          <p>Full igraph wrappers: <strong>louvain</strong>, <strong>leiden</strong>, <strong>fast_greedy</strong>, <strong>walktrap</strong>, <strong>infomap</strong>, <strong>label_prop</strong>, <strong>edge_betweenness</strong>, <strong>leading_eigen</strong>, <strong>spinglass</strong>, <strong>optimal</strong>, <strong>fluid</strong>.</p>
+          <p>Full igraph wrappers: <strong>louvain</strong>, <strong>leiden</strong>, <strong>fast_greedy</strong>, <strong>walktrap</strong>, <strong>infomap</strong>, <strong>label_propagation</strong>, <strong>edge_betweenness</strong>, <strong>leading_eigenvector</strong>, <strong>spinglass</strong>, <strong>optimal</strong>, <strong>fluid</strong>.</p>
         </div>
         <div class="feature-card">
           <h4><span class="icon">&#8596;</span> Full Compatibility</h4>
@@ -1503,8 +1503,8 @@ rob_edge_rnd <- <span class="syntax-function">robustness</span>(g, <span class="
 
       <pre><code><span class="syntax-function">communities</span>(<span class="syntax-param">x</span>,
             <span class="syntax-param">method</span> = <span class="syntax-function">c</span>(<span class="syntax-string">"louvain"</span>, <span class="syntax-string">"leiden"</span>, <span class="syntax-string">"fast_greedy"</span>, <span class="syntax-string">"walktrap"</span>,
-                      <span class="syntax-string">"infomap"</span>, <span class="syntax-string">"label_prop"</span>, <span class="syntax-string">"edge_betweenness"</span>,
-                      <span class="syntax-string">"leading_eigen"</span>, <span class="syntax-string">"spinglass"</span>, <span class="syntax-string">"optimal"</span>, <span class="syntax-string">"fluid"</span>),
+                      <span class="syntax-string">"infomap"</span>, <span class="syntax-string">"label_propagation"</span>, <span class="syntax-string">"edge_betweenness"</span>,
+                      <span class="syntax-string">"leading_eigenvector"</span>, <span class="syntax-string">"spinglass"</span>, <span class="syntax-string">"optimal"</span>, <span class="syntax-string">"fluid"</span>),
             <span class="syntax-param">weights</span> = <span class="syntax-keyword">NULL</span>,
             <span class="syntax-param">resolution</span> = <span class="syntax-number">1</span>,
             ...)</code></pre>
@@ -1553,7 +1553,7 @@ rob_edge_rnd <- <span class="syntax-function">robustness</span>(g, <span class="
           </tr>
           <tr>
             <td><strong>Label Propagation</strong></td>
-            <td><code>community_label_prop()</code></td>
+            <td><code>community_label_propagation()</code></td>
             <td>Very large networks, speed</td>
             <td>O(E)</td>
           </tr>
@@ -1565,7 +1565,7 @@ rob_edge_rnd <- <span class="syntax-function">robustness</span>(g, <span class="
           </tr>
           <tr>
             <td><strong>Leading Eigenvector</strong></td>
-            <td><code>community_leading_eigen()</code></td>
+            <td><code>community_leading_eigenvector()</code></td>
             <td>Dominant structure</td>
             <td>O(n²)</td>
           </tr>
@@ -1642,7 +1642,7 @@ rob_edge_rnd <- <span class="syntax-function">robustness</span>(g, <span class="
 initial <- <span class="syntax-function">c</span>(<span class="syntax-number">1</span>, <span class="syntax-keyword">NA</span>, <span class="syntax-keyword">NA</span>, <span class="syntax-number">2</span>, <span class="syntax-keyword">NA</span>, ...)  <span class="syntax-comment"># Known labels</span>
 fixed <- !<span class="syntax-function">is.na</span>(initial)
 
-<span class="syntax-function">community_label_prop</span>(g,
+<span class="syntax-function">community_label_propagation</span>(g,
   <span class="syntax-param">initial</span> = initial,
   <span class="syntax-param">fixed</span> = fixed,
   <span class="syntax-param">mode</span> = <span class="syntax-string">"all"</span>  <span class="syntax-comment"># For directed: "out", "in", "all"</span>
