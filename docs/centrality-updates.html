@@ -395,7 +395,7 @@
   <div class="header">
     <h1>Centrality &amp; Network Metrics Update</h1>
     <p class="subtitle">cograph Package - Centrality Measures &amp; Network-Level Statistics</p>
-    <span class="version">Version 1.8.0 - February 2026</span>
+    <span class="version">Version 1.9.0 - February 2026</span>
   </div>
 
   <div class="container">
@@ -407,11 +407,12 @@
         <li><a href="#new-measures">3. New Centrality Measures</a></li>
         <li><a href="#network-metrics">4. Network-Level Metrics</a></li>
         <li><a href="#robustness">5. Robustness Analysis</a></li>
-        <li><a href="#bug-fixes">6. Bug Fixes</a></li>
-        <li><a href="#measure-comparison">7. Measure Comparison</a></li>
-        <li><a href="#wrapper-functions">8. Wrapper Functions</a></li>
-        <li><a href="#examples">9. Code Examples</a></li>
-        <li><a href="#migration">10. Migration Guide</a></li>
+        <li><a href="#communities">6. Community Detection</a></li>
+        <li><a href="#bug-fixes">7. Bug Fixes</a></li>
+        <li><a href="#measure-comparison">8. Measure Comparison</a></li>
+        <li><a href="#wrapper-functions">9. Wrapper Functions</a></li>
+        <li><a href="#examples">10. Code Examples</a></li>
+        <li><a href="#migration">11. Migration Guide</a></li>
       </ul>
     </nav>
 
@@ -437,6 +438,10 @@
         <div class="feature-card">
           <h4><span class="icon">+</span> Robustness Analysis</h4>
           <p>New <code>robustness()</code> for attack simulations, <code>plot_robustness()</code> and <code>ggplot_robustness()</code> for visualization, plus <code>robustness_auc()</code> for quantitative comparison.</p>
+        </div>
+        <div class="feature-card">
+          <h4><span class="icon">+</span> 11 Community Detection Algorithms</h4>
+          <p>Full igraph wrappers: <strong>louvain</strong>, <strong>leiden</strong>, <strong>fast_greedy</strong>, <strong>walktrap</strong>, <strong>infomap</strong>, <strong>label_prop</strong>, <strong>edge_betweenness</strong>, <strong>leading_eigen</strong>, <strong>spinglass</strong>, <strong>optimal</strong>, <strong>fluid</strong>.</p>
         </div>
         <div class="feature-card">
           <h4><span class="icon">&#8596;</span> Full Compatibility</h4>
@@ -1488,9 +1493,228 @@ rob_edge_rnd <- <span class="syntax-function">robustness</span>(g, <span class="
       </div>
     </section>
 
+    <!-- SECTION: Community Detection -->
+    <section id="communities">
+      <h2>6. Community Detection</h2>
+
+      <p>Complete wrappers for all igraph community detection algorithms with full parameter exposure. Unified interface via <code>communities()</code> plus individual functions for each algorithm.</p>
+
+      <h3>Main Function</h3>
+
+      <pre><code><span class="syntax-function">communities</span>(<span class="syntax-param">x</span>,
+            <span class="syntax-param">method</span> = <span class="syntax-function">c</span>(<span class="syntax-string">"louvain"</span>, <span class="syntax-string">"leiden"</span>, <span class="syntax-string">"fast_greedy"</span>, <span class="syntax-string">"walktrap"</span>,
+                      <span class="syntax-string">"infomap"</span>, <span class="syntax-string">"label_prop"</span>, <span class="syntax-string">"edge_betweenness"</span>,
+                      <span class="syntax-string">"leading_eigen"</span>, <span class="syntax-string">"spinglass"</span>, <span class="syntax-string">"optimal"</span>, <span class="syntax-string">"fluid"</span>),
+            <span class="syntax-param">weights</span> = <span class="syntax-keyword">NULL</span>,
+            <span class="syntax-param">resolution</span> = <span class="syntax-number">1</span>,
+            ...)</code></pre>
+
+      <h3>Available Algorithms</h3>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Algorithm</th>
+            <th>Function</th>
+            <th>Best For</th>
+            <th>Complexity</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Louvain</strong></td>
+            <td><code>community_louvain()</code></td>
+            <td>Large networks, general use</td>
+            <td>O(n log n)</td>
+          </tr>
+          <tr>
+            <td><strong>Leiden</strong></td>
+            <td><code>community_leiden()</code></td>
+            <td>Better quality than Louvain</td>
+            <td>O(n log n)</td>
+          </tr>
+          <tr>
+            <td><strong>Fast Greedy</strong></td>
+            <td><code>community_fast_greedy()</code></td>
+            <td>Medium networks, hierarchical</td>
+            <td>O(n² log n)</td>
+          </tr>
+          <tr>
+            <td><strong>Walktrap</strong></td>
+            <td><code>community_walktrap()</code></td>
+            <td>Clear community structure</td>
+            <td>O(n² log n)</td>
+          </tr>
+          <tr>
+            <td><strong>Infomap</strong></td>
+            <td><code>community_infomap()</code></td>
+            <td>Directed networks, flow-based</td>
+            <td>O(E)</td>
+          </tr>
+          <tr>
+            <td><strong>Label Propagation</strong></td>
+            <td><code>community_label_prop()</code></td>
+            <td>Very large networks, speed</td>
+            <td>O(E)</td>
+          </tr>
+          <tr>
+            <td><strong>Edge Betweenness</strong></td>
+            <td><code>community_edge_betweenness()</code></td>
+            <td>Small networks, hierarchical</td>
+            <td>O(E² n)</td>
+          </tr>
+          <tr>
+            <td><strong>Leading Eigenvector</strong></td>
+            <td><code>community_leading_eigen()</code></td>
+            <td>Dominant structure</td>
+            <td>O(n²)</td>
+          </tr>
+          <tr>
+            <td><strong>Spinglass</strong></td>
+            <td><code>community_spinglass()</code></td>
+            <td>Negative weights allowed</td>
+            <td>O(n³)</td>
+          </tr>
+          <tr>
+            <td><strong>Optimal</strong></td>
+            <td><code>community_optimal()</code></td>
+            <td>Tiny networks (&lt;50 nodes)</td>
+            <td>NP-hard</td>
+          </tr>
+          <tr>
+            <td><strong>Fluid</strong></td>
+            <td><code>community_fluid()</code></td>
+            <td>Known number of communities</td>
+            <td>O(E k)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Algorithm Parameters</h3>
+
+      <div class="measure-card">
+        <div class="measure-header">
+          <h4>Louvain &amp; Leiden</h4>
+          <span class="badge badge-new">Full Parameters</span>
+        </div>
+        <div class="measure-body">
+          <pre><code><span class="syntax-comment"># Louvain with resolution parameter</span>
+<span class="syntax-function">community_louvain</span>(g, <span class="syntax-param">resolution</span> = <span class="syntax-number">1.5</span>)  <span class="syntax-comment"># More communities</span>
+<span class="syntax-function">community_louvain</span>(g, <span class="syntax-param">resolution</span> = <span class="syntax-number">0.5</span>)  <span class="syntax-comment"># Fewer communities</span>
+
+<span class="syntax-comment"># Leiden with all parameters</span>
+<span class="syntax-function">community_leiden</span>(g,
+  <span class="syntax-param">objective_function</span> = <span class="syntax-string">"CPM"</span>,       <span class="syntax-comment"># or "modularity"</span>
+  <span class="syntax-param">resolution</span> = <span class="syntax-number">1</span>,
+  <span class="syntax-param">beta</span> = <span class="syntax-number">0.01</span>,                      <span class="syntax-comment"># Randomness in refinement</span>
+  <span class="syntax-param">n_iterations</span> = <span class="syntax-number">2</span>,                 <span class="syntax-comment"># -1 for convergence</span>
+  <span class="syntax-param">initial_membership</span> = <span class="syntax-keyword">NULL</span>,        <span class="syntax-comment"># Starting partition</span>
+  <span class="syntax-param">vertex_weights</span> = <span class="syntax-keyword">NULL</span>             <span class="syntax-comment"># For CPM objective</span>
+)</code></pre>
+        </div>
+      </div>
+
+      <div class="measure-card">
+        <div class="measure-header">
+          <h4>Walktrap</h4>
+          <span class="badge badge-new">Full Parameters</span>
+        </div>
+        <div class="measure-body">
+          <pre><code><span class="syntax-comment"># Walktrap with step parameter</span>
+<span class="syntax-function">community_walktrap</span>(g,
+  <span class="syntax-param">steps</span> = <span class="syntax-number">4</span>,         <span class="syntax-comment"># Random walk length (default)</span>
+  <span class="syntax-param">merges</span> = <span class="syntax-keyword">TRUE</span>,     <span class="syntax-comment"># Return merge matrix</span>
+  <span class="syntax-param">modularity</span> = <span class="syntax-keyword">TRUE</span>  <span class="syntax-comment"># Calculate modularity</span>
+)
+
+<span class="syntax-comment"># More steps for larger communities</span>
+<span class="syntax-function">community_walktrap</span>(g, <span class="syntax-param">steps</span> = <span class="syntax-number">8</span>)</code></pre>
+        </div>
+      </div>
+
+      <div class="measure-card">
+        <div class="measure-header">
+          <h4>Label Propagation</h4>
+          <span class="badge badge-new">Full Parameters</span>
+        </div>
+        <div class="measure-body">
+          <pre><code><span class="syntax-comment"># Semi-supervised with fixed seeds</span>
+initial <- <span class="syntax-function">c</span>(<span class="syntax-number">1</span>, <span class="syntax-keyword">NA</span>, <span class="syntax-keyword">NA</span>, <span class="syntax-number">2</span>, <span class="syntax-keyword">NA</span>, ...)  <span class="syntax-comment"># Known labels</span>
+fixed <- !<span class="syntax-function">is.na</span>(initial)
+
+<span class="syntax-function">community_label_prop</span>(g,
+  <span class="syntax-param">initial</span> = initial,
+  <span class="syntax-param">fixed</span> = fixed,
+  <span class="syntax-param">mode</span> = <span class="syntax-string">"all"</span>  <span class="syntax-comment"># For directed: "out", "in", "all"</span>
+)</code></pre>
+        </div>
+      </div>
+
+      <div class="measure-card">
+        <div class="measure-header">
+          <h4>Spinglass</h4>
+          <span class="badge badge-new">Full Parameters</span>
+        </div>
+        <div class="measure-body">
+          <pre><code><span class="syntax-comment"># Full control over simulated annealing</span>
+<span class="syntax-function">community_spinglass</span>(g,
+  <span class="syntax-param">spins</span> = <span class="syntax-number">25</span>,             <span class="syntax-comment"># Max communities</span>
+  <span class="syntax-param">start.temp</span> = <span class="syntax-number">1</span>,         <span class="syntax-comment"># Starting temperature</span>
+  <span class="syntax-param">stop.temp</span> = <span class="syntax-number">0.01</span>,       <span class="syntax-comment"># Stopping temperature</span>
+  <span class="syntax-param">cool.fact</span> = <span class="syntax-number">0.99</span>,       <span class="syntax-comment"># Cooling factor</span>
+  <span class="syntax-param">gamma</span> = <span class="syntax-number">1</span>,              <span class="syntax-comment"># Modularity gamma</span>
+  <span class="syntax-param">implementation</span> = <span class="syntax-string">"neg"</span>  <span class="syntax-comment"># For negative weights</span>
+)</code></pre>
+        </div>
+      </div>
+
+      <h3>Helper Functions</h3>
+
+      <pre><code><span class="syntax-comment"># Get community membership</span>
+comm <- <span class="syntax-function">community_louvain</span>(g)
+<span class="syntax-function">membership</span>(comm)          <span class="syntax-comment"># Named vector of assignments</span>
+
+<span class="syntax-comment"># Community statistics</span>
+<span class="syntax-function">n_communities</span>(comm)       <span class="syntax-comment"># Number of communities</span>
+<span class="syntax-function">community_sizes</span>(comm)     <span class="syntax-comment"># Size of each community</span>
+<span class="syntax-function">modularity</span>(comm)          <span class="syntax-comment"># Modularity score</span>
+
+<span class="syntax-comment"># Compare two community structures</span>
+c1 <- <span class="syntax-function">community_louvain</span>(g)
+c2 <- <span class="syntax-function">community_leiden</span>(g)
+<span class="syntax-function">compare_communities</span>(c1, c2, <span class="syntax-param">method</span> = <span class="syntax-string">"nmi"</span>)  <span class="syntax-comment"># Normalized mutual info</span>
+<span class="syntax-function">compare_communities</span>(c1, c2, <span class="syntax-param">method</span> = <span class="syntax-string">"vi"</span>)   <span class="syntax-comment"># Variation of information</span>
+<span class="syntax-function">compare_communities</span>(c1, c2, <span class="syntax-param">method</span> = <span class="syntax-string">"rand"</span>) <span class="syntax-comment"># Rand index</span></code></pre>
+
+      <h3>Example Usage</h3>
+
+      <pre><code><span class="syntax-comment"># Quick community detection</span>
+g <- igraph::<span class="syntax-function">make_graph</span>(<span class="syntax-string">"Zachary"</span>)
+comm <- <span class="syntax-function">communities</span>(g, <span class="syntax-param">method</span> = <span class="syntax-string">"louvain"</span>)
+<span class="syntax-function">print</span>(comm)
+<span class="syntax-comment"># Community structure (louvain)</span>
+<span class="syntax-comment">#   Number of communities: 4</span>
+<span class="syntax-comment">#   Modularity: 0.4198</span>
+<span class="syntax-comment">#   Community sizes: 12, 6, 5, 11</span>
+
+<span class="syntax-comment"># Visualize with splot</span>
+<span class="syntax-function">splot</span>(g, <span class="syntax-param">node_group</span> = <span class="syntax-function">membership</span>(comm))
+
+<span class="syntax-comment"># Compare algorithms</span>
+results <- <span class="syntax-function">sapply</span>(<span class="syntax-function">c</span>(<span class="syntax-string">"louvain"</span>, <span class="syntax-string">"leiden"</span>, <span class="syntax-string">"walktrap"</span>), <span class="syntax-keyword">function</span>(m) {
+  comm <- <span class="syntax-function">communities</span>(g, <span class="syntax-param">method</span> = m)
+  <span class="syntax-function">c</span>(<span class="syntax-param">n</span> = <span class="syntax-function">n_communities</span>(comm), <span class="syntax-param">mod</span> = <span class="syntax-function">modularity</span>(comm))
+})
+<span class="syntax-function">print</span>(results)</code></pre>
+
+      <div class="alert alert-info">
+        <strong>Tip:</strong> Use <code>method = "louvain"</code> or <code>method = "leiden"</code> for large networks. Use <code>method = "optimal"</code> only for tiny networks (&lt;50 nodes) when exact modularity optimization is required.
+      </div>
+    </section>
+
     <!-- SECTION: Bug Fixes -->
     <section id="bug-fixes">
-      <h2>6. Bug Fixes</h2>
+      <h2>7. Bug Fixes</h2>
 
       <div class="measure-card">
         <div class="measure-header">
@@ -1671,7 +1895,7 @@ hits_result <- <span class="syntax-keyword">NULL</span>
 
     <!-- SECTION: Measure Comparison -->
     <section id="measure-comparison">
-      <h2>7. Complete Measure Comparison: cograph vs igraph</h2>
+      <h2>8. Complete Measure Comparison: cograph vs igraph</h2>
 
       <p>This table shows all parameters available in igraph and whether cograph now exposes them.</p>
 
@@ -1897,7 +2121,7 @@ hits_result <- <span class="syntax-keyword">NULL</span>
 
     <!-- SECTION: Wrapper Functions -->
     <section id="wrapper-functions">
-      <h2>8. Wrapper Functions</h2>
+      <h2>9. Wrapper Functions</h2>
 
       <p>Each centrality measure has a dedicated wrapper function that returns a named vector.</p>
 
@@ -2070,7 +2294,7 @@ hits_result <- <span class="syntax-keyword">NULL</span>
 
     <!-- SECTION: Examples -->
     <section id="examples">
-      <h2>9. Code Examples</h2>
+      <h2>10. Code Examples</h2>
 
       <h3>Basic Usage</h3>
       <pre><code><span class="syntax-comment"># Create a test network</span>
@@ -2293,7 +2517,7 @@ bridge_edges <- <span class="syntax-function">network_bridges</span>(network)
 
     <!-- SECTION: Migration -->
     <section id="migration">
-      <h2>10. Migration Guide</h2>
+      <h2>11. Migration Guide</h2>
 
       <div class="alert alert-success">
         <strong>Good news!</strong> All changes are backward compatible. Existing code will continue to work without modification.
