@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Motif Analysis - cograph Package</title>
+  <style>
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --secondary: #64748b;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --code-bg: #1e293b;
+      --over: #B2182B;
+      --under: #2166AC;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    .header {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      padding: 3rem 2rem;
+      text-align: center;
+    }
+
+    .header h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+    .header .subtitle { font-size: 1.2rem; opacity: 0.9; }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    section {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      color: var(--primary);
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--border);
+    }
+
+    h3 {
+      color: var(--text);
+      margin: 1.5rem 0 1rem;
+    }
+
+    pre {
+      background: var(--code-bg);
+      color: #e2e8f0;
+      padding: 1.25rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+
+    code {
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+    }
+
+    .syntax-comment { color: #6b7280; }
+    .syntax-function { color: #60a5fa; }
+    .syntax-string { color: #34d399; }
+    .syntax-number { color: #fbbf24; }
+    .syntax-param { color: #f472b6; }
+    .syntax-keyword { color: #c084fc; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+    }
+
+    th, td {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background: var(--bg);
+      font-weight: 600;
+    }
+
+    .motif-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.5rem;
+      margin: 2rem 0;
+    }
+
+    .motif-card {
+      background: var(--bg);
+      border-radius: 12px;
+      padding: 1.5rem 1rem;
+      text-align: center;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .motif-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .motif-card svg {
+      width: 120px;
+      height: 100px;
+      margin-bottom: 0.75rem;
+    }
+
+    .motif-card .name {
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--primary);
+    }
+
+    .motif-card .desc {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .badge-over { background: #fecaca; color: var(--over); }
+    .badge-under { background: #bfdbfe; color: var(--under); }
+    .badge-neutral { background: #e5e7eb; color: #6b7280; }
+
+    .example-output {
+      background: #f1f5f9;
+      border-left: 4px solid var(--primary);
+      padding: 1rem 1.25rem;
+      margin: 1rem 0;
+      font-family: monospace;
+      font-size: 0.85rem;
+      white-space: pre-wrap;
+    }
+
+    .plot-container {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      margin: 1rem 0;
+      text-align: center;
+    }
+
+    .plot-container img {
+      max-width: 100%;
+      height: auto;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+      .motif-grid { grid-template-columns: repeat(2, 1fr); }
+      .two-col { grid-template-columns: 1fr; }
+    }
+
+    .tip {
+      background: #ecfdf5;
+      border-left: 4px solid var(--success);
+      padding: 1rem;
+      margin: 1rem 0;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .tip strong { color: var(--success); }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Network Motif Analysis</h1>
+    <p class="subtitle">Discover recurring patterns in your networks</p>
+  </div>
+
+  <div class="container">
+
+    <!-- What are Motifs -->
+    <section>
+      <h2>What are Network Motifs?</h2>
+      <p>Network motifs are small, recurring subgraph patterns that appear more frequently than expected by chance. They represent the "building blocks" of complex networks.</p>
+
+      <h3>The 16 Directed Triads (MAN Notation)</h3>
+      <p>For directed networks, there are 16 possible ways to connect 3 nodes. The MAN notation describes each by:</p>
+      <ul style="margin: 1rem 0 1rem 2rem;">
+        <li><strong>M</strong>: Number of <em>Mutual</em> (reciprocal) edges</li>
+        <li><strong>A</strong>: Number of <em>Asymmetric</em> (one-way) edges</li>
+        <li><strong>N</strong>: Number of <em>Null</em> (absent) edges</li>
+      </ul>
+
+      <!-- SVG Defs for arrows -->
+      <svg style="position: absolute; width: 0; height: 0;">
+        <defs>
+          <marker id="arrow-gray" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+            <path d="M0,0 L0,6 L9,3 z" fill="#64748b"/>
+          </marker>
+          <marker id="arrow-blue" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+            <path d="M0,0 L0,6 L9,3 z" fill="#3b82f6"/>
+          </marker>
+          <marker id="arrow-red" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+            <path d="M0,0 L0,6 L9,3 z" fill="#ef4444"/>
+          </marker>
+          <marker id="arrow-green" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+            <path d="M0,0 L0,6 L9,3 z" fill="#10b981"/>
+          </marker>
+        </defs>
+      </svg>
+
+      <div class="motif-grid">
+        <!-- 003: Empty -->
+        <div class="motif-card">
+          <svg viewBox="0 0 100 80">
+            <circle cx="50" cy="12" r="10" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2"/>
+            <circle cx="20" cy="65" r="10" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2"/>
+            <circle cx="80" cy="65" r="10" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2"/>
+          </svg>
+          <div class="name">003</div>
+          <div class="desc">Empty triad</div>
+        </div>
+
+        <!-- 012: Single edge A→B -->
+        <div class="motif-card">
+          <svg viewBox="0 0 100 80">
+            <line x1="46" y1="20" x2="24" y2="54" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow-gray)"/>
+            <circle cx="50" cy="12" r="10" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2"/>
+            <circle cx="20" cy="65" r="10" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2"/>
+            <circle cx="80" cy="65" r="10" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2"/>
+          </svg>
+          <div class="name">012</div>
+          <div class="desc">Single edge</div>
+        </div>
+
+        <!-- 102: Mutual A↔B -->
+        <div class="motif-card">
+          <svg viewBox="0 0 100 80">
+            <line x1="42" y1="20" x2="24" y2="50" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow-gray)"/>
+            <line x1="28" y1="56" x2="46" y2="20" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow-gray)"/>
+            <circle cx="50" cy="12" r="10" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2"/>
+            <circle cx="20" cy="65" r="10" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2"/>
+            <circle cx="80" cy="65" r="10" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2"/>
+          </svg>
+          <div class="name">102</div>
+          <div class="desc">Mutual dyad</div>
+        </div>
+
+        <!-- 021D: Out-star A→B, A→C -->
+        <div class="motif-card">
+          <svg viewBox="0 0 100 80">
+            <line x1="44" y1="20" x2="24" y2="54" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow-gray)"/>
+            <line x1="56" y1="20" x2="76" y2="54" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow-gray)"/>
+            <circle cx="50" cy="12" r="10" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2"/>
+            <circle cx="20" cy="65" r="10" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2"/>
+            <circle cx="80" cy="65" r="10" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2"/>
+          </svg>
+          <div class="name">021D</div>
+          <div class="desc">Out-star</div>
+        </div>
+
+        <!-- 021U: In-star B→A, C→A -->
+        <div class="motif-card">
+          <svg viewBox="0 0 100 80">
+            <line x1="26" y1="56" x2="44" y2="22" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow-gray)"/>
+            <line x1="74" y1="56" x2="56" y2="22" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow-gray)"/>
+            <circle cx="50" cy="12" r="10" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2"/>
+            <circle cx="20" cy="65" r="10" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2"/>
+            <circle cx="80" cy="65" r="10" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2"/>
+          </svg>
+          <div class="name">021U</div>
+          <div class="desc">In-star</div>
+        </div>
+
+        <!-- 021C: Chain A→B→C -->
+        <div class="motif-card">
+          <svg viewBox="0 0 100 80">
+            <line x1="46" y1="20" x2="24" y2="54" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow-gray)"/>
+            <line x1="32" y1="65" x2="68" y2="65" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow-gray)"/>
+            <circle cx="50" cy="12" r="10" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2"/>
+            <circle cx="20" cy="65" r="10" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2"/>
+            <circle cx="80" cy="65" r="10" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2"/>
+          </svg>
+          <div class="name">021C</div>
+          <div class="desc">Chain</div>
+        </div>
+
+        <!-- 111D: Mutual + out -->
+        <div class="motif-card">
+          <svg viewBox="0 0 100 80">
+            <line x1="42" y1="20" x2="24" y2="50" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow-gray)"/>
+            <line x1="28" y1="56" x2="46" y2="20" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow-gray)"/>
+            <line x1="56" y1="20" x2="76" y2="54" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow-gray)"/>
+            <circle cx="50" cy="12" r="10" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2"/>
+            <circle cx="20" cy="65" r="10" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2"/>
+            <circle cx="80" cy="65" r="10" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2"/>
+          </svg>
+          <div class="name">111D</div>
+          <div class="desc">Mutual + out</div>
+        </div>
+
+        <!-- 111U: Mutual + in -->
+        <div class="motif-card">
+          <svg viewBox="0 0 100 80">
+            <line x1="42" y1="20" x2="24" y2="50" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow-gray)"/>
+            <line x1="28" y1="56" x2="46" y2="20" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow-gray)"/>
+            <line x1="74" y1="56" x2="56" y2="22" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow-gray)"/>
+            <circle cx="50" cy="12" r="10" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2"/>
+            <circle cx="20" cy="65" r="10" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2"/>
+            <circle cx="80" cy="65" r="10" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2"/>
+          </svg>
+          <div class="name">111U</div>
+          <div class="desc">Mutual + in</div>
+        </div>
+
+        <!-- 030T: Feed-forward (transitive) A→B, A→C, B→C -->
+        <div class="motif-card" style="background: #eff6ff;">
+          <svg viewBox="0 0 100 80">
+            <line x1="44" y1="20" x2="24" y2="54" stroke="#3b82f6" stroke-width="2.5" marker-end="url(#arrow-blue)"/>
+            <line x1="56" y1="20" x2="76" y2="54" stroke="#3b82f6" stroke-width="2.5" marker-end="url(#arrow-blue)"/>
+            <line x1="32" y1="65" x2="68" y2="65" stroke="#3b82f6" stroke-width="2.5" marker-end="url(#arrow-blue)"/>
+            <circle cx="50" cy="12" r="10" fill="#bfdbfe" stroke="#3b82f6" stroke-width="2"/>
+            <circle cx="20" cy="65" r="10" fill="#bfdbfe" stroke="#3b82f6" stroke-width="2"/>
+            <circle cx="80" cy="65" r="10" fill="#bfdbfe" stroke="#3b82f6" stroke-width="2"/>
+          </svg>
+          <div class="name">030T</div>
+          <div class="desc">Feed-forward</div>
+        </div>
+
+        <!-- 030C: Cycle A→B→C→A -->
+        <div class="motif-card" style="background: #eff6ff;">
+          <svg viewBox="0 0 100 80">
+            <line x1="44" y1="20" x2="24" y2="54" stroke="#3b82f6" stroke-width="2.5" marker-end="url(#arrow-blue)"/>
+            <line x1="68" y1="65" x2="32" y2="65" stroke="#3b82f6" stroke-width="2.5" marker-end="url(#arrow-blue)"/>
+            <line x1="74" y1="56" x2="56" y2="22" stroke="#3b82f6" stroke-width="2.5" marker-end="url(#arrow-blue)"/>
+            <circle cx="50" cy="12" r="10" fill="#bfdbfe" stroke="#3b82f6" stroke-width="2"/>
+            <circle cx="20" cy="65" r="10" fill="#bfdbfe" stroke="#3b82f6" stroke-width="2"/>
+            <circle cx="80" cy="65" r="10" fill="#bfdbfe" stroke="#3b82f6" stroke-width="2"/>
+          </svg>
+          <div class="name">030C</div>
+          <div class="desc">Cycle</div>
+        </div>
+
+        <!-- 201: Two mutual dyads -->
+        <div class="motif-card">
+          <svg viewBox="0 0 100 80">
+            <line x1="42" y1="20" x2="24" y2="50" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow-gray)"/>
+            <line x1="28" y1="56" x2="46" y2="20" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow-gray)"/>
+            <line x1="58" y1="20" x2="72" y2="50" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow-gray)"/>
+            <line x1="76" y1="56" x2="58" y2="20" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow-gray)"/>
+            <circle cx="50" cy="12" r="10" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2"/>
+            <circle cx="20" cy="65" r="10" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2"/>
+            <circle cx="80" cy="65" r="10" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2"/>
+          </svg>
+          <div class="name">201</div>
+          <div class="desc">Two mutual</div>
+        </div>
+
+        <!-- 120D: Mutual + 2 asymmetric out -->
+        <div class="motif-card">
+          <svg viewBox="0 0 100 80">
+            <line x1="42" y1="20" x2="24" y2="50" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow-gray)"/>
+            <line x1="28" y1="56" x2="46" y2="20" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow-gray)"/>
+            <line x1="56" y1="20" x2="76" y2="54" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow-gray)"/>
+            <line x1="32" y1="65" x2="68" y2="65" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow-gray)"/>
+            <circle cx="50" cy="12" r="10" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2"/>
+            <circle cx="20" cy="65" r="10" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2"/>
+            <circle cx="80" cy="65" r="10" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2"/>
+          </svg>
+          <div class="name">120D</div>
+          <div class="desc">Mutual + 2 out</div>
+        </div>
+
+        <!-- 120U: Mutual + 2 asymmetric in -->
+        <div class="motif-card">
+          <svg viewBox="0 0 100 80">
+            <line x1="42" y1="20" x2="24" y2="50" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow-gray)"/>
+            <line x1="28" y1="56" x2="46" y2="20" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow-gray)"/>
+            <line x1="74" y1="56" x2="56" y2="22" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow-gray)"/>
+            <line x1="68" y1="65" x2="32" y2="65" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow-gray)"/>
+            <circle cx="50" cy="12" r="10" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2"/>
+            <circle cx="20" cy="65" r="10" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2"/>
+            <circle cx="80" cy="65" r="10" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2"/>
+          </svg>
+          <div class="name">120U</div>
+          <div class="desc">Mutual + 2 in</div>
+        </div>
+
+        <!-- 120C: Two mutual chain -->
+        <div class="motif-card" style="background: #fef2f2;">
+          <svg viewBox="0 0 100 80">
+            <line x1="42" y1="20" x2="24" y2="50" stroke="#ef4444" stroke-width="2.5" marker-end="url(#arrow-red)"/>
+            <line x1="28" y1="56" x2="46" y2="20" stroke="#ef4444" stroke-width="2.5" marker-end="url(#arrow-red)"/>
+            <line x1="32" y1="62" x2="68" y2="62" stroke="#ef4444" stroke-width="2.5" marker-end="url(#arrow-red)"/>
+            <line x1="68" y1="68" x2="32" y2="68" stroke="#ef4444" stroke-width="2.5" marker-end="url(#arrow-red)"/>
+            <circle cx="50" cy="12" r="10" fill="#fecaca" stroke="#ef4444" stroke-width="2"/>
+            <circle cx="20" cy="65" r="10" fill="#fecaca" stroke="#ef4444" stroke-width="2"/>
+            <circle cx="80" cy="65" r="10" fill="#fecaca" stroke="#ef4444" stroke-width="2"/>
+          </svg>
+          <div class="name">120C</div>
+          <div class="desc">2 mutual chain</div>
+        </div>
+
+        <!-- 210: Two mutual + 1 asymmetric -->
+        <div class="motif-card">
+          <svg viewBox="0 0 100 80">
+            <line x1="42" y1="20" x2="24" y2="50" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow-gray)"/>
+            <line x1="28" y1="56" x2="46" y2="20" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow-gray)"/>
+            <line x1="58" y1="20" x2="72" y2="50" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow-gray)"/>
+            <line x1="76" y1="56" x2="58" y2="20" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow-gray)"/>
+            <line x1="32" y1="65" x2="68" y2="65" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow-gray)"/>
+            <circle cx="50" cy="12" r="10" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2"/>
+            <circle cx="20" cy="65" r="10" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2"/>
+            <circle cx="80" cy="65" r="10" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2"/>
+          </svg>
+          <div class="name">210</div>
+          <div class="desc">2 mutual + edge</div>
+        </div>
+
+        <!-- 300: Complete (all mutual) -->
+        <div class="motif-card" style="background: #ecfdf5;">
+          <svg viewBox="0 0 100 80">
+            <line x1="42" y1="18" x2="24" y2="50" stroke="#10b981" stroke-width="2.5" marker-end="url(#arrow-green)"/>
+            <line x1="28" y1="56" x2="44" y2="22" stroke="#10b981" stroke-width="2.5" marker-end="url(#arrow-green)"/>
+            <line x1="58" y1="18" x2="72" y2="50" stroke="#10b981" stroke-width="2.5" marker-end="url(#arrow-green)"/>
+            <line x1="76" y1="56" x2="56" y2="22" stroke="#10b981" stroke-width="2.5" marker-end="url(#arrow-green)"/>
+            <line x1="32" y1="62" x2="68" y2="62" stroke="#10b981" stroke-width="2.5" marker-end="url(#arrow-green)"/>
+            <line x1="68" y1="68" x2="32" y2="68" stroke="#10b981" stroke-width="2.5" marker-end="url(#arrow-green)"/>
+            <circle cx="50" cy="12" r="10" fill="#a7f3d0" stroke="#10b981" stroke-width="2"/>
+            <circle cx="20" cy="65" r="10" fill="#a7f3d0" stroke="#10b981" stroke-width="2"/>
+            <circle cx="80" cy="65" r="10" fill="#a7f3d0" stroke="#10b981" stroke-width="2"/>
+          </svg>
+          <div class="name">300</div>
+          <div class="desc">Complete</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Quick Start -->
+    <section>
+      <h2>Quick Start</h2>
+
+      <h3>Basic Usage</h3>
+      <pre><code><span class="syntax-keyword">library</span>(cograph)
+
+<span class="syntax-comment"># Create a directed network</span>
+<span class="syntax-function">set.seed</span>(<span class="syntax-number">42</span>)
+mat <- <span class="syntax-function">matrix</span>(<span class="syntax-function">sample</span>(<span class="syntax-number">0</span>:<span class="syntax-number">1</span>, <span class="syntax-number">100</span>, <span class="syntax-param">replace</span> = <span class="syntax-keyword">TRUE</span>, <span class="syntax-param">prob</span> = <span class="syntax-function">c</span>(<span class="syntax-number">0.7</span>, <span class="syntax-number">0.3</span>)), <span class="syntax-number">10</span>, <span class="syntax-number">10</span>)
+<span class="syntax-function">diag</span>(mat) <- <span class="syntax-number">0</span>
+
+<span class="syntax-comment"># Analyze motifs</span>
+m <- <span class="syntax-function">motif_census</span>(mat, <span class="syntax-param">directed</span> = <span class="syntax-keyword">TRUE</span>)
+<span class="syntax-function">print</span>(m)</code></pre>
+
+      <div class="example-output">Network Motif Analysis
+Size: 3-node motifs (directed)
+Null model: configuration (n=100)
+
+Significant motifs:
+ motif count expected     z        p
+  120C     5      0.6  6.57 5.0e-11
+   201     3      0.6  2.94  0.0033
+
+Over-represented: 2 | Under-represented: 0</div>
+
+      <h3>Visualize Results</h3>
+      <pre><code><span class="syntax-comment"># Bar chart of z-scores</span>
+<span class="syntax-function">plot</span>(m, <span class="syntax-param">type</span> = <span class="syntax-string">"bar"</span>)
+
+<span class="syntax-comment"># Network diagrams of each motif</span>
+<span class="syntax-function">plot</span>(m, <span class="syntax-param">type</span> = <span class="syntax-string">"network"</span>)</code></pre>
+    </section>
+
+    <!-- Use Cases -->
+    <section>
+      <h2>Use Cases</h2>
+
+      <div class="two-col">
+        <div>
+          <h3>Social Networks</h3>
+          <table>
+            <tr><th>Motif</th><th>Interpretation</th></tr>
+            <tr><td>030T (Feed-forward)</td><td>Information cascade, hierarchy</td></tr>
+            <tr><td>030C (Cycle)</td><td>Balanced relationships, reciprocity</td></tr>
+            <tr><td>120C</td><td>Trust triangles, strong ties</td></tr>
+            <tr><td>300 (Complete)</td><td>Clique, tight-knit group</td></tr>
+          </table>
+        </div>
+        <div>
+          <h3>Biological Networks</h3>
+          <table>
+            <tr><th>Motif</th><th>Interpretation</th></tr>
+            <tr><td>030T (Feed-forward)</td><td>Gene regulation cascade</td></tr>
+            <tr><td>021D (Out-star)</td><td>Master regulator</td></tr>
+            <tr><td>021U (In-star)</td><td>Common target</td></tr>
+            <tr><td>030C (Cycle)</td><td>Feedback loop</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="tip">
+        <strong>Tip:</strong> The feed-forward loop (030T) is famously over-represented in gene regulatory networks (Milo et al., 2002) and acts as a noise filter in signal processing.
+      </div>
+    </section>
+
+    <!-- Parameters -->
+    <section>
+      <h2>Function Reference</h2>
+
+      <h3>motif_census()</h3>
+      <table>
+        <thead>
+          <tr><th>Parameter</th><th>Default</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>x</code></td><td>-</td><td>Matrix, igraph, or cograph_network</td></tr>
+          <tr><td><code>size</code></td><td>3</td><td>Motif size: 3 (triads) or 4 (tetrads)</td></tr>
+          <tr><td><code>n_random</code></td><td>100</td><td>Number of random networks for null model</td></tr>
+          <tr><td><code>method</code></td><td>"configuration"</td><td>Null model: "configuration" or "gnm"</td></tr>
+          <tr><td><code>directed</code></td><td>auto</td><td>Treat as directed network?</td></tr>
+          <tr><td><code>seed</code></td><td>NULL</td><td>Random seed for reproducibility</td></tr>
+        </tbody>
+      </table>
+
+      <h3>plot() types</h3>
+      <table>
+        <thead>
+          <tr><th>Type</th><th>Description</th><th>Best for</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>"bar"</code></td>
+            <td>Horizontal bar chart of z-scores</td>
+            <td>Quick overview, publications</td>
+          </tr>
+          <tr>
+            <td><code>"network"</code></td>
+            <td>Grid of actual motif patterns</td>
+            <td>Understanding structures</td>
+          </tr>
+          <tr>
+            <td><code>"heatmap"</code></td>
+            <td>Compact count + expected heatmap</td>
+            <td>Comparing multiple networks</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>triad_census()</h3>
+      <pre><code><span class="syntax-comment"># Quick count without null model comparison</span>
+<span class="syntax-function">triad_census</span>(mat)
+<span class="syntax-comment">#  003  012  102 021D 021U 021C 111D 111U 030T 030C  201 120D 120U 120C  210  300</span>
+<span class="syntax-comment">#    8   35    8    6    8   17   10    6    6    3    3    2    5    3    0    0</span></code></pre>
+    </section>
+
+    <!-- Advanced Examples -->
+    <section>
+      <h2>Advanced Examples</h2>
+
+      <h3>Compare Two Networks</h3>
+      <pre><code><span class="syntax-comment"># Network A: Random</span>
+net_a <- <span class="syntax-function">matrix</span>(<span class="syntax-function">sample</span>(<span class="syntax-number">0</span>:<span class="syntax-number">1</span>, <span class="syntax-number">400</span>, <span class="syntax-param">replace</span> = <span class="syntax-keyword">TRUE</span>, <span class="syntax-param">prob</span> = <span class="syntax-function">c</span>(<span class="syntax-number">0.8</span>, <span class="syntax-number">0.2</span>)), <span class="syntax-number">20</span>, <span class="syntax-number">20</span>)
+<span class="syntax-function">diag</span>(net_a) <- <span class="syntax-number">0</span>
+
+<span class="syntax-comment"># Network B: Add feed-forward structures</span>
+net_b <- net_a
+<span class="syntax-keyword">for</span> (i <span class="syntax-keyword">in</span> <span class="syntax-function">seq</span>(<span class="syntax-number">1</span>, <span class="syntax-number">15</span>, <span class="syntax-number">3</span>)) {
+  net_b[i, i+<span class="syntax-number">1</span>] <- net_b[i, i+<span class="syntax-number">2</span>] <- net_b[i+<span class="syntax-number">1</span>, i+<span class="syntax-number">2</span>] <- <span class="syntax-number">1</span>
+}
+
+<span class="syntax-comment"># Compare motif profiles</span>
+m_a <- <span class="syntax-function">motif_census</span>(net_a, <span class="syntax-param">n_random</span> = <span class="syntax-number">200</span>)
+m_b <- <span class="syntax-function">motif_census</span>(net_b, <span class="syntax-param">n_random</span> = <span class="syntax-number">200</span>)
+
+<span class="syntax-comment"># Plot side by side</span>
+<span class="syntax-function">par</span>(<span class="syntax-param">mfrow</span> = <span class="syntax-function">c</span>(<span class="syntax-number">1</span>, <span class="syntax-number">2</span>))
+<span class="syntax-function">plot</span>(m_a, <span class="syntax-param">type</span> = <span class="syntax-string">"bar"</span>, <span class="syntax-param">main</span> = <span class="syntax-string">"Random"</span>)
+<span class="syntax-function">plot</span>(m_b, <span class="syntax-param">type</span> = <span class="syntax-string">"bar"</span>, <span class="syntax-param">main</span> = <span class="syntax-string">"With Feed-forward"</span>)</code></pre>
+
+      <h3>Undirected Networks</h3>
+      <pre><code><span class="syntax-comment"># For undirected networks, analyze triangle patterns</span>
+mat_sym <- mat | <span class="syntax-function">t</span>(mat)  <span class="syntax-comment"># Symmetrize</span>
+m_und <- <span class="syntax-function">motif_census</span>(mat_sym, <span class="syntax-param">directed</span> = <span class="syntax-keyword">FALSE</span>)
+<span class="syntax-function">print</span>(m_und)</code></pre>
+
+      <div class="example-output">Network Motif Analysis
+Size: 3-node motifs (undirected)
+Null model: configuration (n=100)
+
+Significant motifs:
+  motif count expected    z       p
+ triangle   19     18.4 0.45    0.65
+
+Over-represented: 0 | Under-represented: 0</div>
+
+      <h3>Using G(n,m) Null Model</h3>
+      <pre><code><span class="syntax-comment"># Configuration model preserves degree sequence</span>
+<span class="syntax-comment"># G(n,m) only preserves edge count - more conservative</span>
+m_gnm <- <span class="syntax-function">motif_census</span>(mat, <span class="syntax-param">method</span> = <span class="syntax-string">"gnm"</span>, <span class="syntax-param">n_random</span> = <span class="syntax-number">500</span>)
+<span class="syntax-function">plot</span>(m_gnm)</code></pre>
+    </section>
+
+    <!-- Interpretation -->
+    <section>
+      <h2>Interpreting Results</h2>
+
+      <table>
+        <thead>
+          <tr><th>Z-score</th><th>Interpretation</th><th>Color</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>z > 2</td>
+            <td><strong>Over-represented</strong> - appears more than expected, likely functional</td>
+            <td><span class="badge badge-over">Red</span></td>
+          </tr>
+          <tr>
+            <td>-2 < z < 2</td>
+            <td><strong>Not significant</strong> - consistent with random</td>
+            <td><span class="badge badge-neutral">Gray</span></td>
+          </tr>
+          <tr>
+            <td>z < -2</td>
+            <td><strong>Under-represented</strong> - actively avoided, possibly unstable</td>
+            <td><span class="badge badge-under">Blue</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="tip">
+        <strong>Note:</strong> Use <code>n_random = 1000</code> for publication-quality results. The default (100) is faster but less precise for p-values.
+      </div>
+    </section>
+
+    <!-- References -->
+    <section>
+      <h2>References</h2>
+      <ul style="margin-left: 1.5rem;">
+        <li>Milo, R., et al. (2002). Network motifs: Simple building blocks of complex networks. <em>Science</em>, 298(5594), 824-827.</li>
+        <li>Wasserman, S., & Faust, K. (1994). <em>Social network analysis: Methods and applications</em>. Cambridge University Press. (MAN notation)</li>
+        <li>Alon, U. (2007). Network motifs: theory and experimental approaches. <em>Nature Reviews Genetics</em>, 8(6), 450-461.</li>
+      </ul>
+    </section>
+
+  </div>
+</body>
+</html>
