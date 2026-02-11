@@ -410,9 +410,10 @@
         <li><a href="#communities">6. Community Detection</a></li>
         <li><a href="#bug-fixes">7. Bug Fixes</a></li>
         <li><a href="#measure-comparison">8. Measure Comparison</a></li>
-        <li><a href="#wrapper-functions">9. Wrapper Functions</a></li>
-        <li><a href="#examples">10. Code Examples</a></li>
-        <li><a href="#migration">11. Migration Guide</a></li>
+        <li><a href="#validation">9. Validation</a></li>
+        <li><a href="#wrapper-functions">10. Wrapper Functions</a></li>
+        <li><a href="#examples">11. Code Examples</a></li>
+        <li><a href="#migration">12. Migration Guide</a></li>
       </ul>
     </nav>
 
@@ -428,8 +429,8 @@
           <p>Added <code>cutoff</code>, <code>damping</code>, <code>personalized</code>, <code>transitivity_type</code>, <code>isolates</code>, <code>lambda</code>, and <code>k</code>.</p>
         </div>
         <div class="feature-card">
-          <h4><span class="icon">+</span> 5 New Centrality Measures</h4>
-          <p><strong>harmonic</strong>, <strong>diffusion</strong>, <strong>leverage</strong>, <strong>kreach</strong>, and <strong>resilience</strong> centrality.</p>
+          <h4><span class="icon">+</span> 4 New Centrality Measures</h4>
+          <p><strong>harmonic</strong>, <strong>diffusion</strong>, <strong>leverage</strong>, and <strong>kreach</strong> centrality.</p>
         </div>
         <div class="feature-card">
           <h4><span class="icon">+</span> 10 Network-Level Metrics</h4>
@@ -861,62 +862,6 @@ adj_isolated[<span class="syntax-number">1</span>:<span class="syntax-number">4<
         </div>
       </div>
 
-      <div class="measure-card">
-        <div class="measure-header">
-          <h4>Resilience Centrality</h4>
-          <span class="badge badge-new">New</span>
-        </div>
-        <div class="measure-body">
-          <p>Resilience centrality measures how many nodes must be removed before a node becomes disconnected from its neighbors. Based on vertex connectivity - counts alternative vertex-disjoint paths.</p>
-
-          <h4>Interpretation</h4>
-          <ul>
-            <li><strong>0:</strong> Vulnerable - only direct connections (single path to neighbors)</li>
-            <li><strong>1:</strong> Has one alternative path (removing 1 node breaks backup route)</li>
-            <li><strong>2+:</strong> Highly resilient - multiple redundant paths</li>
-          </ul>
-
-          <h4>Example Values</h4>
-          <table>
-            <thead>
-              <tr>
-                <th>Graph Type</th>
-                <th>Resilience</th>
-                <th>Why</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Path graph (A-B-C-D)</td>
-                <td>All 0</td>
-                <td>Single paths, easily broken</td>
-              </tr>
-              <tr>
-                <td>Cycle (A-B-C-D-A)</td>
-                <td>All 1</td>
-                <td>Two paths to each neighbor</td>
-              </tr>
-              <tr>
-                <td>Complete K4</td>
-                <td>All 2</td>
-                <td>Highly redundant connections</td>
-              </tr>
-              <tr>
-                <td>Star graph</td>
-                <td>All 0</td>
-                <td>No alternative paths</td>
-              </tr>
-            </tbody>
-          </table>
-
-          <pre><code><span class="syntax-comment"># Basic usage</span>
-<span class="syntax-function">centrality_resilience</span>(adj)
-
-<span class="syntax-comment"># Identify vulnerable nodes</span>
-res <- <span class="syntax-function">centrality_resilience</span>(network)
-vulnerable <- <span class="syntax-function">names</span>(res[res == <span class="syntax-number">0</span>])</code></pre>
-        </div>
-      </div>
     </section>
 
     <!-- SECTION: Network-Level Metrics -->
@@ -2106,22 +2051,56 @@ hits_result <- <span class="syntax-keyword">NULL</span>
             <td>Path length (default 3)</td>
           </tr>
 
-          <tr>
-            <td rowspan="2"><strong>resilience</strong></td>
-            <td colspan="3" style="text-align: center; font-style: italic;"><span class="badge badge-new">NEW MEASURE</span> vertex connectivity based</td>
-          </tr>
-          <tr>
-            <td><code>-</code></td>
-            <td><span class="status-icon check">&#10003;</span></td>
-            <td>No additional parameters</td>
-          </tr>
         </tbody>
       </table>
     </section>
 
+    <!-- SECTION: Validation -->
+    <section id="validation">
+      <h2>9. Validation Against External Packages</h2>
+
+      <p>All centrality measures in cograph are validated against established R packages and Python NetworkX to ensure mathematical correctness.</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Package</th>
+            <th>Validated Measures</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>igraph</strong> (R)</td>
+            <td>degree, betweenness, closeness, eigenvector, pagerank, harmonic, alpha (Katz), subgraph, power (Bonacich), edge_betweenness</td>
+          </tr>
+          <tr>
+            <td><strong>centiserve</strong> (R)</td>
+            <td>laplacian, current_flow_closeness, diffusion, leverage, kreach</td>
+          </tr>
+          <tr>
+            <td><strong>sna</strong> (R)</td>
+            <td>load</td>
+          </tr>
+          <tr>
+            <td><strong>NetworkX</strong> (Python)</td>
+            <td>current_flow_betweenness, percolation, laplacian, voterank</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p style="margin-top: 1rem;"><strong>igraph wrappers</strong> (direct pass-through, inherently validated): strength, eccentricity, coreness, constraint, transitivity, authority, hub</p>
+
+      <h3>Running Validation Tests</h3>
+      <pre><code><span class="syntax-comment"># Run the validation script</span>
+Rscript validation/test_centrality_equivalence.R
+
+<span class="syntax-comment"># Or run formal tests</span>
+devtools::test(filter = <span class="syntax-string">"centrality"</span>)</code></pre>
+    </section>
+
     <!-- SECTION: Wrapper Functions -->
     <section id="wrapper-functions">
-      <h2>9. Wrapper Functions</h2>
+      <h2>10. Wrapper Functions</h2>
 
       <p>Each centrality measure has a dedicated wrapper function that returns a named vector.</p>
 
@@ -2214,11 +2193,6 @@ hits_result <- <span class="syntax-keyword">NULL</span>
             <td>mode, k (path length)</td>
             <td><span class="badge badge-new">New</span></td>
           </tr>
-          <tr>
-            <td><code>centrality_resilience(x, ...)</code></td>
-            <td>-</td>
-            <td><span class="badge badge-new">New</span></td>
-          </tr>
         </tbody>
       </table>
 
@@ -2294,7 +2268,7 @@ hits_result <- <span class="syntax-keyword">NULL</span>
 
     <!-- SECTION: Examples -->
     <section id="examples">
-      <h2>10. Code Examples</h2>
+      <h2>11. Code Examples</h2>
 
       <h3>Basic Usage</h3>
       <pre><code><span class="syntax-comment"># Create a test network</span>
@@ -2430,11 +2404,7 @@ adj_iso <- <span class="syntax-function">rbind</span>(<span class="syntax-functi
 
 <span class="syntax-comment"># K-reach - nodes within k hops</span>
 <span class="syntax-function">centrality_kreach</span>(adj, <span class="syntax-param">k</span> = <span class="syntax-number">1</span>)  <span class="syntax-comment"># Direct neighbors</span>
-<span class="syntax-function">centrality_kreach</span>(adj, <span class="syntax-param">k</span> = <span class="syntax-number">2</span>)  <span class="syntax-comment"># 2-hop neighborhood</span>
-
-<span class="syntax-comment"># Resilience - how many nodes to remove before disconnection</span>
-<span class="syntax-function">centrality_resilience</span>(adj)
-<span class="syntax-comment"># 0 = vulnerable, higher = more resilient</span></code></pre>
+<span class="syntax-function">centrality_kreach</span>(adj, <span class="syntax-param">k</span> = <span class="syntax-number">2</span>)  <span class="syntax-comment"># 2-hop neighborhood</span></code></pre>
 
       <h3>Harmonic vs Closeness for Disconnected Graphs</h3>
       <pre><code><span class="syntax-comment"># Create disconnected graph (two components)</span>
@@ -2517,7 +2487,7 @@ bridge_edges <- <span class="syntax-function">network_bridges</span>(network)
 
     <!-- SECTION: Migration -->
     <section id="migration">
-      <h2>11. Migration Guide</h2>
+      <h2>12. Migration Guide</h2>
 
       <div class="alert alert-success">
         <strong>Good news!</strong> All changes are backward compatible. Existing code will continue to work without modification.
@@ -2604,7 +2574,7 @@ similar_to_A <- <span class="syntax-function">centrality_pagerank</span>(item_ne
       <pre><code><span class="syntax-comment"># Size nodes by any centrality measure!</span>
 <span class="syntax-function">splot</span>(network, <span class="syntax-param">scale_nodes_by</span> = <span class="syntax-string">"degree"</span>)
 <span class="syntax-function">splot</span>(network, <span class="syntax-param">scale_nodes_by</span> = <span class="syntax-string">"betweenness"</span>)
-<span class="syntax-function">splot</span>(network, <span class="syntax-param">scale_nodes_by</span> = <span class="syntax-string">"resilience"</span>)
+<span class="syntax-function">splot</span>(network, <span class="syntax-param">scale_nodes_by</span> = <span class="syntax-string">"eigenvector"</span>)
 
 <span class="syntax-comment"># With custom size range</span>
 <span class="syntax-function">splot</span>(network,
