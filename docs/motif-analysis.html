@@ -369,6 +369,7 @@
         <li><a href="#what-are-motifs">What are Motifs?</a></li>
         <li><a href="#16-triads">The 16 Directed Triads</a></li>
         <li><a href="#extract-motifs">extract_motifs() Function</a></li>
+        <li><a href="#input-types">Supported Input Types</a></li>
         <li><a href="#pattern-filter">Pattern Filtering</a></li>
         <li><a href="#edge-methods">Edge Detection Methods</a></li>
         <li><a href="#significance">Significance Testing</a></li>
@@ -728,12 +729,14 @@
     <!-- extract_motifs() Function -->
     <section id="extract-motifs">
       <h2>The extract_motifs() Function</h2>
-      <p>The main function for extracting labeled triads from individual-level transition data with comprehensive filtering and significance testing.</p>
+      <p>A universal function for extracting labeled triads from network data with comprehensive filtering and significance testing. Supports both individual-level analysis (with tna objects or grouped data) and aggregate analysis (with matrices or networks).</p>
 
       <div class="function-sig">
 <span class="fn-name">extract_motifs</span>(
-  x,                                    <span class="fn-comment"># tna object (required)</span>
-  <span class="fn-param">level</span> = <span class="fn-default">"individual"</span>,             <span class="fn-comment"># or "aggregate"</span>
+  <span class="fn-param">x</span> = <span class="fn-default">NULL</span>,                           <span class="fn-comment"># tna, matrix, cograph_network, or igraph</span>
+  <span class="fn-param">data</span> = <span class="fn-default">NULL</span>,                        <span class="fn-comment"># data.frame with from, to, and id columns</span>
+  <span class="fn-param">id</span> = <span class="fn-default">NULL</span>,                          <span class="fn-comment"># column name(s) for individual IDs</span>
+  <span class="fn-param">level</span> = <span class="fn-default">NULL</span>,                       <span class="fn-comment"># "individual" or "aggregate" (auto-detected)</span>
   <span class="fn-param">edge_method</span> = <span class="fn-default">"any"</span>,                 <span class="fn-comment"># "any", "expected", or "percent"</span>
   <span class="fn-param">edge_threshold</span> = <span class="fn-default">1.5</span>,               <span class="fn-comment"># threshold for expected/percent methods</span>
   <span class="fn-param">pattern</span> = <span class="fn-default">"triangle"</span>,               <span class="fn-comment"># "triangle", "network", or "all"</span>
@@ -756,13 +759,23 @@
         <tbody>
           <tr>
             <td>x</td>
-            <td>-</td>
-            <td>A <code>tna</code> object containing individual-level transition data</td>
+            <td>NULL</td>
+            <td>Input data: <code>tna</code> object, <code>matrix</code>, <code>cograph_network</code>, or <code>igraph</code>. See <a href="#input-types">Supported Input Types</a>.</td>
+          </tr>
+          <tr>
+            <td>data</td>
+            <td>NULL</td>
+            <td>A <code>data.frame</code> with transition data. Must contain <code>from</code> and <code>to</code> columns, plus the column(s) specified in <code>id</code>.</td>
+          </tr>
+          <tr>
+            <td>id</td>
+            <td>NULL</td>
+            <td>Column name(s) identifying individuals/groups. Can be a single string <code>"person_id"</code> or multiple <code>c("group", "person")</code>.</td>
           </tr>
           <tr>
             <td>level</td>
-            <td>"individual"</td>
-            <td>Analysis level: <code>"individual"</code> counts how many people have each triad; <code>"aggregate"</code> analyzes summed network</td>
+            <td>NULL</td>
+            <td>Analysis level: <code>"individual"</code> counts how many people have each triad; <code>"aggregate"</code> analyzes single network. <strong>Auto-detected</strong> based on input type.</td>
           </tr>
           <tr>
             <td>edge_method</td>
@@ -821,6 +834,86 @@
           </tr>
         </tbody>
       </table>
+    </section>
+
+    <!-- Supported Input Types -->
+    <section id="input-types">
+      <h2>Supported Input Types</h2>
+      <p>The <code>extract_motifs()</code> function accepts multiple input formats, automatically detecting the appropriate analysis level.</p>
+
+      <table>
+        <thead>
+          <tr><th>Input Type</th><th>Level</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>tna</code> object</td>
+            <td><span class="badge badge-triangle">individual</span></td>
+            <td>Uses raw transition data from each participant. Full individual-level analysis with significance testing.</td>
+          </tr>
+          <tr>
+            <td><code>data.frame</code> + <code>id</code></td>
+            <td><span class="badge badge-triangle">individual</span></td>
+            <td>Edge list with ID column(s). Supports multiple grouping variables (e.g., group + person).</td>
+          </tr>
+          <tr>
+            <td><code>matrix</code></td>
+            <td><span class="badge badge-network">aggregate</span></td>
+            <td>Weighted adjacency matrix. Single network analysis.</td>
+          </tr>
+          <tr>
+            <td><code>cograph_network</code></td>
+            <td><span class="badge badge-network">aggregate</span></td>
+            <td>Cograph network object. Single network analysis.</td>
+          </tr>
+          <tr>
+            <td><code>igraph</code></td>
+            <td><span class="badge badge-network">aggregate</span></td>
+            <td>Igraph object (weighted or unweighted). Single network analysis.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Usage Examples by Input Type</h3>
+
+      <pre><code><span class="syntax-comment"># 1. TNA object (individual-level)</span>
+<span class="syntax-keyword">library</span>(tna)
+Mod <- <span class="syntax-function">tna</span>(group_regulation)
+m <- <span class="syntax-function">extract_motifs</span>(Mod)
+<span class="syntax-comment"># Level: individual, Individuals: 2000</span>
+
+<span class="syntax-comment"># 2. Data.frame with single ID column</span>
+df <- <span class="syntax-function">data.frame</span>(
+  <span class="syntax-param">person_id</span> = <span class="syntax-function">c</span>(<span class="syntax-number">1</span>, <span class="syntax-number">1</span>, <span class="syntax-number">1</span>, <span class="syntax-number">2</span>, <span class="syntax-number">2</span>),
+  <span class="syntax-param">from</span> = <span class="syntax-function">c</span>(<span class="syntax-string">"A"</span>, <span class="syntax-string">"B"</span>, <span class="syntax-string">"C"</span>, <span class="syntax-string">"A"</span>, <span class="syntax-string">"B"</span>),
+  <span class="syntax-param">to</span> = <span class="syntax-function">c</span>(<span class="syntax-string">"B"</span>, <span class="syntax-string">"C"</span>, <span class="syntax-string">"A"</span>, <span class="syntax-string">"C"</span>, <span class="syntax-string">"A"</span>)
+)
+m <- <span class="syntax-function">extract_motifs</span>(<span class="syntax-param">data</span> = df, <span class="syntax-param">id</span> = <span class="syntax-string">"person_id"</span>)
+<span class="syntax-comment"># Level: individual</span>
+
+<span class="syntax-comment"># 3. Data.frame with multiple ID columns (hierarchical)</span>
+df$group <- <span class="syntax-function">c</span>(<span class="syntax-string">"A"</span>, <span class="syntax-string">"A"</span>, <span class="syntax-string">"A"</span>, <span class="syntax-string">"B"</span>, <span class="syntax-string">"B"</span>)
+m <- <span class="syntax-function">extract_motifs</span>(<span class="syntax-param">data</span> = df, <span class="syntax-param">id</span> = <span class="syntax-function">c</span>(<span class="syntax-string">"group"</span>, <span class="syntax-string">"person_id"</span>))
+<span class="syntax-comment"># Creates unique IDs like "A_1", "B_2"</span>
+
+<span class="syntax-comment"># 4. Matrix (aggregate-level)</span>
+mat <- Mod$weights
+m <- <span class="syntax-function">extract_motifs</span>(mat)
+<span class="syntax-comment"># Level: aggregate</span>
+
+<span class="syntax-comment"># 5. Igraph object</span>
+<span class="syntax-keyword">library</span>(igraph)
+g <- <span class="syntax-function">graph_from_adjacency_matrix</span>(mat, <span class="syntax-param">weighted</span> = <span class="syntax-keyword">TRUE</span>)
+m <- <span class="syntax-function">extract_motifs</span>(g)
+<span class="syntax-comment"># Level: aggregate</span></code></pre>
+
+      <div class="tip">
+        <strong>Individual vs Aggregate:</strong> Individual-level analysis counts how many <em>people</em> have each triad pattern. Aggregate analysis examines the single combined/input network. Individual-level is more powerful for significance testing.
+      </div>
+
+      <div class="warning">
+        <strong>Level Auto-Detection:</strong> The function automatically chooses <code>"individual"</code> level for tna objects and data.frames with ID, and <code>"aggregate"</code> for matrices/networks. You can override this with the <code>level</code> parameter, but requesting individual-level on aggregate data will show a warning.
+      </div>
     </section>
 
     <!-- Pattern Filtering -->
@@ -961,20 +1054,20 @@ m <- <span class="syntax-function">extract_motifs</span>(Mod, <span class="synta
     <section id="examples">
       <h2>Examples</h2>
 
-      <h3>Basic Usage</h3>
+      <h3>Basic Usage with TNA Object</h3>
       <pre><code><span class="syntax-keyword">library</span>(tna)
 <span class="syntax-keyword">library</span>(cograph)
 
 <span class="syntax-comment"># Create TNA model from data</span>
 Mod <- <span class="syntax-function">tna</span>(group_regulation)
 
-<span class="syntax-comment"># Extract triangles (default)</span>
+<span class="syntax-comment"># Extract triangles (default) - individual level</span>
 m <- <span class="syntax-function">extract_motifs</span>(Mod)
 <span class="syntax-function">print</span>(m)</code></pre>
 
       <div class="example-output">Motif Analysis
 Pattern: triangle | Edge method: any
-Individuals: 191 | States: 7 | Total triads: 35
+Individuals: 2000 | States: 9 | Total triads: 72
 
 Type distribution:
 120C 030C 030T  210 120D 120U  300
@@ -982,10 +1075,40 @@ Type distribution:
 
 Top 20 triads:
                               triad type observed
-  cohesion - consensus - emotion  120C      127
-  consensus - discuss - synthesis 120C      119
-  cohesion - discuss - emotion    030C      112
+  consensus - emotion - plan        120C      436
+  consensus - coregulate - discuss  120C      330
+  consensus - coregulate - plan     120C      301
   ...</div>
+
+      <h3>From Data.Frame with ID Column</h3>
+      <pre><code><span class="syntax-comment"># Transition data with person IDs</span>
+df <- <span class="syntax-function">data.frame</span>(
+  <span class="syntax-param">person_id</span> = <span class="syntax-function">rep</span>(<span class="syntax-number">1</span>:<span class="syntax-number">50</span>, <span class="syntax-param">each</span> = <span class="syntax-number">20</span>),
+  <span class="syntax-param">from</span> = <span class="syntax-function">sample</span>(<span class="syntax-function">c</span>(<span class="syntax-string">"A"</span>, <span class="syntax-string">"B"</span>, <span class="syntax-string">"C"</span>, <span class="syntax-string">"D"</span>), <span class="syntax-number">1000</span>, <span class="syntax-param">replace</span> = <span class="syntax-keyword">TRUE</span>),
+  <span class="syntax-param">to</span> = <span class="syntax-function">sample</span>(<span class="syntax-function">c</span>(<span class="syntax-string">"A"</span>, <span class="syntax-string">"B"</span>, <span class="syntax-string">"C"</span>, <span class="syntax-string">"D"</span>), <span class="syntax-number">1000</span>, <span class="syntax-param">replace</span> = <span class="syntax-keyword">TRUE</span>)
+)
+
+<span class="syntax-comment"># Individual-level analysis</span>
+m <- <span class="syntax-function">extract_motifs</span>(<span class="syntax-param">data</span> = df, <span class="syntax-param">id</span> = <span class="syntax-string">"person_id"</span>)
+
+<span class="syntax-comment"># Multiple grouping columns (hierarchical)</span>
+df$group <- <span class="syntax-function">ifelse</span>(df$person_id <= <span class="syntax-number">25</span>, <span class="syntax-string">"control"</span>, <span class="syntax-string">"treatment"</span>)
+m <- <span class="syntax-function">extract_motifs</span>(<span class="syntax-param">data</span> = df, <span class="syntax-param">id</span> = <span class="syntax-function">c</span>(<span class="syntax-string">"group"</span>, <span class="syntax-string">"person_id"</span>))</code></pre>
+
+      <h3>From Matrix or Network (Aggregate Level)</h3>
+      <pre><code><span class="syntax-comment"># From weight matrix</span>
+mat <- Mod$weights
+m <- <span class="syntax-function">extract_motifs</span>(mat, <span class="syntax-param">pattern</span> = <span class="syntax-string">"all"</span>)
+<span class="syntax-comment"># Level: aggregate, Individuals: 1</span>
+
+<span class="syntax-comment"># From igraph</span>
+<span class="syntax-keyword">library</span>(igraph)
+g <- <span class="syntax-function">graph_from_adjacency_matrix</span>(mat, <span class="syntax-param">mode</span> = <span class="syntax-string">"directed"</span>, <span class="syntax-param">weighted</span> = <span class="syntax-keyword">TRUE</span>)
+m <- <span class="syntax-function">extract_motifs</span>(g)
+
+<span class="syntax-comment"># From cograph_network</span>
+net <- <span class="syntax-function">as_cograph</span>(mat)
+m <- <span class="syntax-function">extract_motifs</span>(net)</code></pre>
 
       <h3>With Significance Testing</h3>
       <pre><code><span class="syntax-comment"># Top 10 significant triangles</span>
